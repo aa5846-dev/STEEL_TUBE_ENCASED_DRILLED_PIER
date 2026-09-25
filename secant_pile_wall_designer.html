@@ -186,6 +186,7 @@ function buildModel(I) {
   L.forEach((l, i) => { l.botEff = i < L.length - 1 ? l.bot : -1e9; l.idx = i; });
   M.L = L; M.cache = new Map(); M.toe = I.ze; M.seep = false; M.H = I.zr - I.ze;
   M.bl = (I.bldg || []).filter(b => b.q > 0 && b.B > 0);
+  M.slab = slabRes(M); M.Rslab = M.slab.R;
   M.LF = loadFactors(I);
   return M;
 }
@@ -341,9 +342,19 @@ function rotCheck(M, D) { // returns {r (≥1 passes), mode, rA, rB}
   else { rA = modeRatio(M, D, 'A', 1, M.LF, M.phiP); rB = modeRatio(M, D, 'B', 1, M.LF, M.phiP); }
   return { r: Math.min(rA, rB), mode: rA <= rB ? 'A' : 'B', rA, rB };
 }
+/* ---- slab sliding resistance: self-weight friction on the bearing soil (AASHTO 10.6.3.4) ----
+   N = (γc·t − uplift)·Bs per ft of wall; drained: R = N·tan δ, tan δ = f·tan φ′; undrained: R = min(su·Bs, N/2). */
+function slabRes(M) {
+  const t = M.slabT, zBase = M.zb - t / 2, Bs = M.slabB, W = M.gc * t * Bs;
+  const hw = Math.max(0, Math.min(M.wte, zBase + t) - zBase), U = GW * hw * Bs, N = Math.max(0, W - U);
+  const l = M.L[layerAt(M, zBase - 0.01)];
+  if (l.type === 'U') { const Rc = l.su * Bs, Rn = 0.5 * N; return { t, zBase, Bs, W, U, N, layer: l.name, U_: true, su: l.su, Rc, Rn, R: Math.min(Rc, Rn) }; }
+  const mu = M.muF * Math.tan(rad(l.phi));
+  return { t, zBase, Bs, W, U, N, layer: l.name, U_: false, phi: l.phi, mu, R: mu * N };
+}
 function slide(M, D) {
   const R = analyze(M, D, 'A', 1), Pp = -R.pp[0], Fd = npF(R, UNIT);
-  return { Pp, Fd, FS: Fd > 1e-6 ? (Pp + M.Rcap * 1000) / Fd : Infinity };
+  return { Pp, Fd, FS: Fd > 1e-6 ? (Pp + M.Rslab) / Fd : Infinity };
 }
 // smallest D that passes and keeps passing over a window W beyond it (handles non-monotonic factors,
 // e.g. sliding FS dipping at shallow D, or clay profiles whose factor slowly declines at great depth)
@@ -375,7 +386,7 @@ function achieved(M, D) { // report the factor actually provided at D in the cho
 function validate(I) {
   const e = [], w = [];
   const num = (v, n) => { if (!isFinite(v)) e.push(n + ' must be a number.'); };
-  ['top', 'zr', 'ze', 'zb', 'wtr', 'wte', 'q', 'dia', 'sp', 'Rcap', 'Dmin', 'inc', 'round', 'FSsl'].forEach(k => num(I[k], k));
+  ['top', 'zr', 'ze', 'zb', 'wtr', 'wte', 'q', 'dia', 'sp', 'slabT', 'slabB', 'gc', 'muF', 'Dmin', 'inc', 'round', 'FSsl'].forEach(k => num(I[k], k));
   if (!(I.zr <= I.top)) e.push('Retained grade must be at or below the top of wall.');
   if (!(I.ze < I.zr)) e.push('Excavation grade must be below the retained grade.');
   if (!(I.zb >= I.ze && I.zb <= I.top)) e.push('Brace level must lie between the excavation grade and the top of wall.');
@@ -384,6 +395,8 @@ function validate(I) {
   else if (I.sp >= I.dia) e.push('Spacing must be less than the pile diameter so the piles overlap (secant).');
   else if ((I.dia - I.sp) / I.dia < 0.1) w.push('Overlap is under 10% of the diameter; check verticality tolerance for a continuous wall at depth.');
   if (I.q < 0) e.push('Surcharge cannot be negative.');
+  if (!(I.slabT > 0 && I.slabB > 0 && I.gc > 0)) e.push('Slab thickness, slab width and concrete unit weight must be positive.');
+  if (!(I.muF > 0 && I.muF <= 1)) e.push('Slab friction factor tan δ / tan φ′ must be between 0 and 1.');
   (I.bldg || []).forEach((b, i) => {
     const n = `Building load ${i + 1} (${b.name || ''})`;
     if (!(b.q >= 0)) e.push(`${n}: bearing pressure cannot be negative.`);
@@ -555,7 +568,7 @@ function design(I) {
 
   return {
     I, M, errors: [], warnings, mode, rot, prov, Dot, Dsl, Dreq, Dd, toe, len: I.top - toe, FSsl: sl.FS, sl, g1A, g1B,
-    Rs, svc, fac, S, F: Fd, prof, ot, bld, compTab, hinge, coef, rows, basal, hyd, LF: M.LF, aep: M.aep,
+    Rs, svc, fac, S, F: Fd, prof, ot, bld, slab: M.slab, compTab, hinge, coef, rows, basal, hyd, LF: M.LF, aep: M.aep,
     geom: { r_in, ov, t_in, b_ft, Ec, Ig, Ie, rho, logrho: Math.log10(rho) },
     per: { M: S.Mmax * b_ft / 1000, V: Math.abs(S.Vmax) * b_ft / 1000, Mu: Fd.Mmax * b_ft / 1000, Vu: Math.abs(Fd.Vmax) * b_ft / 1000, R: svc.R / 1000, Ru: fac.R / 1000 }
   };
@@ -935,9 +948,13 @@ function calcBlocks(res) {
   E("D=\\max\\big(\\lceil\\max(D_{OT},D_{SL})(1+\\alpha)\\rceil_{\\Delta},\\,D_{min}\\big)=\\max\\big(\\lceil\\max(" + n_(res.Dot, 2) + "," + n_(res.Dsl, 2) + ")\\times" + n_(1 + I.inc / 100, 2) + "\\rceil_{" + n_(I.round, 2) + "},\\," + n_(I.Dmin, 2) + "\\big)=" + n_(res.Dd, 2) + "\\ \\text{ft},\\quad z_t=" + n_(res.toe, 2));
 
   H('E. Sliding (horizontal equilibrium, whole wall toward the excavation)');
+  const sb = res.slab;
+  E("N=\\big(\\gamma_c\\,t_s-\\gamma_w h_w\\big)B_s=\\big(" + n_(I.gc, 0) + "\\times" + n_(sb.t, 2) + "-" + n_(GW, 1) + "\\times" + n_(sb.U / GW / sb.Bs, 2) + "\\big)\\times" + n_(sb.Bs, 1) + "=" + K(sb.N) + "\\ \\text{kip/ft}", 'Slab self-weight less uplift');
+  if (sb.U_) E("R_{slab}=\\min\\big(s_uB_s,\\ \\tfrac12N\\big)=\\min\\big(" + n_(sb.su, 0) + "\\times" + n_(sb.Bs, 1) + "/1000,\\ " + K(sb.N) + "/2\\big)=" + K(sb.R) + "\\ \\text{kip/ft}", 'AASHTO 10.6.3.4');
+  else E("R_{slab}=N\\tan\\delta=N\\,f\\tan\\phi'=" + K(sb.N) + "\\times" + n_(I.muF, 2) + "\\tan" + n_(sb.phi, 1) + "^\\circ=" + K(sb.N) + "\\times" + n_(sb.mu, 3) + "=" + K(sb.R) + "\\ \\text{kip/ft}", 'AASHTO 10.6.3.4');
   E("F_{SL}=\\int p_n\\,dz,\\qquad R_{SL}=P_p+R_{slab},\\qquad FS_{SL}=\\frac{R_{SL}}{F_{SL}}", 'Horizontal equilibrium');
-  E("FS_{SL}=\\frac{" + K(res.sl.Pp) + "+" + n_(I.Rcap, 2) + "}{" + K(res.sl.Fd) + "}=\\frac{" + n_((res.sl.Pp + I.Rcap * 1000) / 1000, 2) + "}{" + K(res.sl.Fd) + "}=" + n_(res.FSsl, 2) + "\\ \\ge\\ " + n_(I.FSsl, 2) + okT(res.FSsl >= I.FSsl - 1e-9));
-  P('F_SL = unfactored driving force (earth, surcharges and net water), kip/ft; P_p = full available passive in front of the wall, kip/ft; R_slab = slab lateral resistance input for this check, kip/ft.');
+  E("FS_{SL}=\\frac{" + K(res.sl.Pp) + "+" + K(sb.R) + "}{" + K(res.sl.Fd) + "}=\\frac{" + K(res.sl.Pp + sb.R) + "}{" + K(res.sl.Fd) + "}=" + n_(res.FSsl, 2) + "\\ \\ge\\ " + n_(I.FSsl, 2) + okT(res.FSsl >= I.FSsl - 1e-9));
+  P('F_SL = unfactored driving force (earth, surcharges and net water), kip/ft; P_p = full available passive in front of the wall, kip/ft; R_slab = friction of the slab bearing on "' + sb.layer + '" (slab base EL ' + f1(sb.zBase, 2) + ' ft, width B_s = ' + f1(sb.Bs, 1) + ' ft, h_w = water head above the slab base, ft), kip/ft.');
 
   H('F. Slab reaction, shear and moment');
   E("\\lambda=\\frac{M_O}{M_R}=\\frac{" + K(ot.MO) + "}{" + K(ot.MR) + "}=" + n_(res.svc.lam, 4) + ",\\qquad R=\\int p_n\\,dz-\\lambda\\int p_p\\,dz=" + n_((Rs.eh[0] + Rs.es[0] + Rs.bs[0] + Rs.wa[0]) / 1000, 2) + (Rs.pp[0] < 0 ? "-" : "+") + n_(res.svc.lam, 4) + "\\times" + n_(Math.abs(Rs.pp[0]) / 1000, 2) + "=" + n_(res.svc.R / 1000, 2) + "\\ \\text{kip/ft}", 'FHWA Fig. 8-59 step 6');
@@ -959,7 +976,7 @@ function checksList(res) {
   const I = res.I, L = [], ot = res.ot, dc = (fs, req) => isFinite(fs) ? req / fs : 0;
   if (I.meth === 'LRFD') L.push({ n: 'Overturning about slab, mode ' + res.mode + ' (LRFD)', dn: 'Σγ·M_O', cn: 'φp·M_R', dem: ot.MOu / 1000, cap: I.phiP * ot.MR / 1000, u: 'kip-ft/ft', fs: res.prov, req: 1, ref: 'FHWA §8.9.2.4; AASHTO 11.5.6-1' });
   else L.push({ n: 'Overturning about slab, mode ' + res.mode + (I.meth === 'Fs' ? ' (Fs on strength)' : ''), dn: 'M_O', cn: 'M_R', dem: ot.MO / 1000, cap: ot.MR / 1000, u: 'kip-ft/ft', fs: res.prov, req: I.meth === 'Fp' ? I.FSp : I.FSs, ref: I.meth === 'Fp' ? 'FHWA §8.10.2, Fig. 8-59' : 'FHWA §8.10.2; CIRIA 104' });
-  L.push({ n: 'Sliding toward excavation', dn: 'F_SL', cn: 'Pp + R_slab', dem: res.sl.Fd / 1000, cap: (res.sl.Pp + I.Rcap * 1000) / 1000, u: 'kip/ft', fs: res.FSsl, req: I.FSsl, ref: 'Horizontal equilibrium' });
+  L.push({ n: 'Sliding toward excavation', dn: 'F_SL', cn: 'Pp + R_slab', dem: res.sl.Fd / 1000, cap: (res.sl.Pp + res.slab.R) / 1000, u: 'kip/ft', fs: res.FSsl, req: I.FSsl, ref: 'Horizontal equilibrium' });
   if (res.basal.applicable) {
     const b = res.basal;
     L.push({ n: 'Basal heave (' + b.layer + ')', dn: 'γH + q', cn: 'Nc·su', dem: b.gbar * b.H + I.q - (isFinite(b.Bp) ? b.su * b.H / b.Bp : 0), cap: b.Nc * b.su, u: 'psf', fs: b.FS, req: I.FSbh, ref: isFinite(b.Bp) ? 'FHWA Eq. 8-9' : 'FHWA Eq. 8-10' });
@@ -984,7 +1001,7 @@ const ASSUME = res => [
   'Single lateral support at the slab acting as a pin; wall rigid below the slab for the free-earth embedment check (FHWA 8.10.2). Deflections and staged construction need a soil-structure interaction analysis (FHWA 8.12.2).',
   'Vertical wall, level grades, same strata both sides. Elevations in ft (positive up); pressures in psf and forces/moments per ft of wall unless noted.',
   'Uniform surcharge q acts on the full retained grade (dp = K q). Building footings are Boussinesq strip loads parallel to the wall of unlimited length (conservative for finite buildings), doubled for a non-yielding wall (AASHTO 3.11.6.2), acting from the footing base to the toe as ES loads; below the slab in mode B they are ignored (they would resist).',
-  'Overturning: moments about the slab, weaker of mode A / mode B governs. Sliding: whole wall translating toward the excavation, resisted by full passive in front plus the slab lateral resistance input.',
+  'Overturning: moments about the slab, weaker of mode A / mode B governs. Sliding: whole wall translating toward the excavation, resisted by full passive in front plus slab friction (slab self-weight less uplift x tan delta on the bearing layer; undrained: min(su B_s, N/2), AASHTO 10.6.3.4). Other loads on the slab are conservatively ignored.',
   'DCR = required FS / provided FS (LRFD: factored demand / factored resistance); DCR <= 1.00 passes.',
   'Load factors: ' + res.LF.note + '.',
   'Free-earth moments are not reduced for flexibility (Rowe, FHWA Fig. 8-60); log rho is reported. Hydraulic heave uses the average gradient of the linear head-loss model; confirm with a flow net where marginal.',
@@ -1075,7 +1092,7 @@ async function buildPDF(res, jsPDF, tex2svg) {
   const u2 = (a, b) => a.map((r, i) => [...r, ...(b[i] || ['', '', ''])]);
   const gA = [
     ['Top of wall', f1(I.top, 2), 'EL ft'], ['Retained grade', f1(I.zr, 2), 'EL ft'], ['Excavation grade', f1(I.ze, 2), 'EL ft'],
-    ['Slab centroid (brace)', f1(I.zb, 2), 'EL ft'], ['Slab thickness', f1(I.slabT, 2), 'ft'], ['Retained height H', f1(I.zr - I.ze, 2), 'ft'],
+    ['Slab centroid (brace)', f1(I.zb, 2), 'EL ft'], ['Slab thickness t_s / width B_s', f1(I.slabT, 2) + ' / ' + f1(I.slabB, 1), 'ft'], ['Concrete unit weight', f1(I.gc, 0), 'pcf'], ['Retained height H', f1(I.zr - I.ze, 2), 'ft'],
     ['Stiff stratum below exc.', I.Dst > 0 ? f1(I.Dst, 1) : 'none', 'ft'], ['Uniform surcharge q', f1(I.q, 0) + ' (' + I.qType + ')', 'psf']];
   const gB = [
     ['Water behind wall', f1(I.wtr, 2), 'EL ft'], ['Water in front of wall', f1(I.wte, 2), 'EL ft'], ['Pile diameter d', f1(I.dia, 1), 'in'],
@@ -1091,7 +1108,7 @@ async function buildPDF(res, jsPDF, tex2svg) {
   await T(['Design criterion', 'Value', 'Unit', 'Design criterion', 'Value', 'Unit'], u2([
     ['Required ' + (I.meth === 'Fp' ? 'Fp' : I.meth === 'Fs' ? 'Fs' : 'phi_p'), f1(I.meth === 'Fp' ? I.FSp : I.meth === 'Fs' ? I.FSs : I.phiP, 2), '-'], ['Required FS sliding', f1(I.FSsl, 2), '-'],
     ['Required FS basal heave', f1(I.FSbh, 2), '-'], ['Required FS hydraulic heave', f1(I.FShy, 2), '-']], [
-    ['Slab lateral resistance (sliding)', f1(I.Rcap, 1), 'kip/ft'], ['Minimum embedment', f1(I.Dmin, 2), 'ft'],
+    ['Slab friction factor tan d / tan phi\'', f1(I.muF, 2), '-'], ['Minimum embedment', f1(I.Dmin, 2), 'ft'],
     ['Increase on computed D', f1(I.inc, 1), '%'], ['Round D up to', f1(I.round, 2), 'ft']]), [44, 16, 14, 50, 18, 16], { fs: 7.8, align: ['left', 'right', 'left', 'left', 'right', 'left'] });
   fig(planFig(res), 'Figure 2 - Secant pile plan (d, s, overlap and interlock thickness in inches).');
 
@@ -1155,7 +1172,10 @@ const SCHEMA = [
  { g: 'Geometry', open: true, f: [
   { id: 'top', l: 'Top of wall', u: 'EL ft', v: 100 }, { id: 'zr', l: 'Ground behind wall (retained grade)', u: 'EL ft', v: 100 },
   { id: 'ze', l: 'Ground in front of wall (excavation grade)', u: 'EL ft', v: 80 }, { id: 'zb', l: 'Brace: foundation slab centroid', u: 'EL ft', v: 82 },
-  { id: 'slabT', l: 'Slab thickness (drawing)', u: 'ft', v: 3 },
+  { id: 'slabT', l: 'Slab thickness t_s', u: 'ft', v: 3 },
+  { id: 'slabB', l: 'Slab width perpendicular to wall B_s (bearing on soil)', u: 'ft', v: 60 },
+  { id: 'gc', l: 'Concrete unit weight γc', u: 'pcf', v: 150 },
+  { id: 'muF', l: 'Slab–soil friction factor tan δ / tan φ′ (1.0 cast-in-place, 0.8 precast)', u: '–', v: 1.0 },
   { id: 'Dst', l: 'Depth to stiff stratum below excavation grade (0 = none)', u: 'ft', v: 0 }] },
  { g: 'Secant piles', open: false, f: [
   { id: 'dia', l: 'Pile diameter d', u: 'in', v: 36 }, { id: 'sp', l: 'Center-to-center spacing s', u: 'in', v: 30 },
@@ -1179,7 +1199,6 @@ const SCHEMA = [
   { id: 'meth', l: 'Embedment safety method', t: 'sel', o: [['Fp', 'Fp — factor on passive (ASD)'], ['Fs', 'Fs — factor on strength'], ['LRFD', 'LRFD — φp = 0.75']], v: 'Fp' },
   { id: 'FSp', l: 'Required Fp', u: '–', v: 1.5, dep: ['meth', 'Fp'] }, { id: 'FSs', l: 'Required Fs', u: '–', v: 1.5, dep: ['meth', 'Fs'] }, { id: 'phiP', l: 'Resistance factor φp', u: '–', v: 0.75, dep: ['meth', 'LRFD'] },
   { id: 'FSsl', l: 'Required FS, sliding', u: '–', v: 1.5 }, { id: 'FSbh', l: 'Required FS, basal heave', u: '–', v: 1.5 }, { id: 'FShy', l: 'Required FS, hydraulic heave', u: '–', v: 1.5 },
-  { id: 'Rcap', l: 'Slab lateral resistance (sliding check only)', u: 'kip/ft', v: 40 },
   { id: 'Dmin', l: 'Minimum embedment', u: 'ft', v: 5 }, { id: 'inc', l: 'Increase on computed embedment', u: '%', v: 0 }, { id: 'round', l: 'Round embedment up to', u: 'ft', v: 0.5 },
   { id: 'lfBasis', l: 'Load factors for demands', t: 'sel', o: [['AASHTO', 'AASHTO LRFD Strength I'], ['ACI', 'ACI 318 / ASCE 7 (1.6H)']], v: 'AASHTO' }] }
 ];
@@ -1350,7 +1369,8 @@ function renderCalc(r) {
   ['Mode A factor (unfactored MR/MO)', isFinite(r.g1A) ? r.g1A.toFixed(3) : 'no mechanism'], ['Mode B factor (unfactored MR/MO)', isFinite(r.g1B) ? r.g1B.toFixed(3) : 'no mechanism'],
   ['Provided, in the selected method', f1(r.prov, 3)], ['D for rotation / sliding', f1(r.Dot, 3) + ' / ' + f1(r.Dsl, 3) + ' ft'], ['Design D, toe EL', f1(r.Dd, 2) + ' ft, EL ' + f1(r.toe, 2)],
   ['Overturning moment MO / resisting moment MR (service)', fk(r.ot.MO, 2) + ' / ' + fk(r.ot.MR, 2) + ' kip-ft/ft'],
-  ['Sliding force / sliding resistance (Pp + R_slab)', fk(r.sl.Fd, 2) + ' / ' + fk(r.sl.Pp + r.I.Rcap * 1000, 2) + ' kip/ft'],
+  ['Slab friction: N (self-weight − uplift) / R_slab, on ' + esc(r.slab.layer), fk(r.slab.N, 2) + ' / ' + fk(r.slab.R, 2) + ' kip/ft' + (r.slab.U_ ? ' (min(su·Bs, N/2))' : ' (μ = ' + r.slab.mu.toFixed(3) + ')')],
+  ['Sliding force / sliding resistance (Pp + R_slab)', fk(r.sl.Fd, 2) + ' / ' + fk(r.sl.Pp + r.slab.R, 2) + ' kip/ft'],
   ['λ service / factored', r.svc.lam.toFixed(4) + ' / ' + r.fac.lam.toFixed(4)],
   ...(r.aep ? [['Apparent pressure ordinate p, H1', f1(r.aep.p, 0) + ' psf, ' + f1(r.aep.H1, 2) + ' ft']] : []),
   ...(r.basal.applicable ? [['Basal heave: Nc, block width, FS, Ns', `${r.basal.Nc.toFixed(2)}, ${isFinite(r.basal.Bp) ? f1(r.basal.Bp, 1) + ' ft (stiff stratum)' : 'unbounded (one-sided wall)'}, ${f1(r.basal.FS, 2)}, ${f1(r.basal.Ns, 2)}`]] : []),
