@@ -1,0 +1,1481 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Secant pile wall — braced embedment design (FHWA NHI-07-071)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600&display=swap" rel="stylesheet">
+<script>
+window.MJ_STATE = 'loading';
+window.MathJax = { svg: { fontCache: 'none' }, startup: { typeset: false, ready: () => { MathJax.startup.defaultReady(); MathJax.startup.promise.then(() => { window.MJ_STATE = 'ready'; document.dispatchEvent(new Event('mj-ready')); }); } } };
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-svg.js" async onerror="window.MJ_STATE='failed';document.dispatchEvent(new Event('mj-ready'))"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+ --bg:#E7EAE7;--panel:#F7F8F6;--ink:#1C2226;--muted:#5E676C;--line:#CDD2CE;--field:#FFFFFF;--accent:#2F6FA3;--ok:#3C7A55;--ng:#B4462F;--warn:#A8741F;--hi:#EEF1EE;
+ --f-ink:#1C2226;--f-muted:#5E676C;--f-grid:#C8CDC9;--f-act:#B4462F;--f-pas:#3C7A55;--f-wat:#2F6FA3;--f-conc:#8C9498;--f-concF:#D6D9D6;--f-netF:#E2E5E2;--f-wall:#78808A;
+ --f-s0:#E9D6AA;--f-s1:#DAC496;--f-s2:#CCB896;--f-s3:#C0AC8C;--f-s4:#DCCEB4;--f-sec:#A8B0B4;
+ --sans:"Barlow",system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;--cond:"Barlow Condensed","Arial Narrow",var(--sans)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+ --bg:#141819;--panel:#1C2123;--ink:#E3E7E5;--muted:#9AA3A7;--line:#343B3E;--field:#121617;--accent:#6FA8D6;--ok:#6DB38A;--ng:#E07A62;--warn:#D9A54A;--hi:#232A2C;
+ --f-ink:#E3E7E5;--f-muted:#9AA3A7;--f-grid:#3A4245;--f-act:#E07A62;--f-pas:#6DB38A;--f-wat:#6FA8D6;--f-conc:#8C9498;--f-concF:#3A4144;--f-netF:#2A3033;--f-wall:#5C656B;
+ --f-s0:#4B4331;--f-s1:#54492F;--f-s2:#4A4235;--f-s3:#433C32;--f-s4:#51493A;--f-sec:#6B757A}}
+:root[data-theme="dark"]{
+ --bg:#141819;--panel:#1C2123;--ink:#E3E7E5;--muted:#9AA3A7;--line:#343B3E;--field:#121617;--accent:#6FA8D6;--ok:#6DB38A;--ng:#E07A62;--warn:#D9A54A;--hi:#232A2C;
+ --f-ink:#E3E7E5;--f-muted:#9AA3A7;--f-grid:#3A4245;--f-act:#E07A62;--f-pas:#6DB38A;--f-wat:#6FA8D6;--f-conc:#8C9498;--f-concF:#3A4144;--f-netF:#2A3033;--f-wall:#5C656B;
+ --f-s0:#4B4331;--f-s1:#54492F;--f-s2:#4A4235;--f-s3:#433C32;--f-s4:#51493A;--f-sec:#6B757A}
+*,*::before,*::after{box-sizing:inherit}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--ink);font:15px/1.45 var(--sans);font-variant-numeric:tabular-nums;-webkit-text-size-adjust:100%}
+header{display:flex;align-items:center;gap:16px;padding:12px 22px;border-bottom:1px solid var(--line);background:var(--panel);position:sticky;top:env(safe-area-inset-top,0px);z-index:5;flex-wrap:wrap}
+header h1{font:600 22px/1.1 var(--cond);margin:0}
+header p{margin:2px 0 0;color:var(--muted);font-size:13px}
+header .sp{flex:1}
+.acts{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+button{font:500 14px var(--sans);border-radius:6px;cursor:pointer}
+.btn{background:var(--accent);color:#fff;border:0;padding:9px 16px}
+.btn:disabled{opacity:.5;cursor:default}
+.btn2{background:transparent;color:var(--ink);border:1px solid var(--line);padding:7px 11px;font-size:13px}
+.dlnote{font-size:12.5px;color:var(--muted);min-width:1px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{display:grid;grid-template-columns:minmax(340px,420px) 1fr;min-height:calc(100% - 64px)}
+aside{border-right:1px solid var(--line);padding:4px 18px 40px;background:var(--panel)}
+main{padding:18px 24px 48px;min-width:0}
+details{border-bottom:1px solid var(--line);padding:10px 0}
+summary{font:600 17px var(--cond);cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center}
+summary::-webkit-details-marker{display:none}
+summary::after{content:"+";color:var(--muted);font:400 18px var(--sans)}
+details[open] summary::after{content:"–"}
+.row{display:grid;grid-template-columns:1fr 112px;align-items:center;gap:10px;margin:6px 0}
+.row.wide{grid-template-columns:1fr 1.5fr}
+.row label{font-size:13.5px}
+.row .u{color:var(--muted);font-size:12px;margin-left:4px}
+.row[hidden]{display:none}
+.help{font-size:12px;color:var(--muted);margin:-2px 0 8px;line-height:1.4}
+input,select{font:14px var(--sans);color:var(--ink);background:var(--field);border:1px solid var(--line);border-radius:5px;padding:5px 7px;width:100%;font-variant-numeric:tabular-nums}
+input[type=number]{text-align:right}
+input[type=checkbox]{width:auto;justify-self:end;transform:scale(1.15)}
+.lt{border-collapse:collapse;font-size:12.5px;margin-top:6px}
+.lt th{font-weight:500;color:var(--muted);text-align:right;padding:2px 3px;white-space:nowrap}
+.lt th:first-child{text-align:left}
+.lt td{padding:2px 2px}
+.lt input,.lt select{padding:4px 4px;font-size:12.5px}
+.lt .rm{border:0;background:none;color:var(--muted);font-size:17px;padding:0 5px}
+.lt .inf{color:var(--muted);text-align:right;padding-right:6px}
+.lt th .u{color:var(--muted);font-size:11px;font-weight:400}
+.lt input:disabled{opacity:.35}
+.scroll{overflow-x:auto}
+.big{display:flex;gap:28px;flex-wrap:wrap;margin:0 0 16px}
+.big div{min-width:118px}
+.big b{display:block;font:600 34px/1.05 var(--cond)}
+.big span{font-size:13px;color:var(--muted)}
+.sum{display:grid;grid-template-columns:1fr;gap:18px;align-items:start}
+.sum>div:last-child{max-width:760px}
+table.t{border-collapse:collapse;width:100%;font-size:13.5px}
+table.t th,table.t td{padding:5px 8px;border-bottom:1px solid var(--line);text-align:right;vertical-align:top}
+table.t th{color:var(--muted);font-weight:500;background:var(--hi);white-space:nowrap}
+table.t th:first-child,table.t td:first-child{text-align:left}
+table.t td.l,table.t th.l{text-align:left}
+table.t tr.g td{font-weight:600}
+table.t td.ref{color:var(--muted);font-size:12.5px;text-align:left}
+.pill{display:inline-block;min-width:34px;text-align:center;border-radius:3px;font-size:12px;font-weight:600;padding:1px 6px;color:#fff}
+.pill.ok{background:var(--ok)}.pill.ng{background:var(--ng)}.pill.na{background:var(--line);color:var(--muted)}
+.msgs{margin:0 0 14px;padding:0;list-style:none}
+.msgs li{border-left:3px solid var(--ng);padding:6px 10px;margin:6px 0;background:var(--panel);font-size:13.5px}
+.msgs li.w{border-left-color:var(--warn)}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin:20px 0 14px;overflow-x:auto}
+.tabs button{border:0;background:none;color:var(--muted);padding:9px 13px;border-bottom:2px solid transparent;border-radius:0;white-space:nowrap}
+.tabs button[aria-selected=true]{color:var(--ink);border-bottom-color:var(--accent)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px}
+h3{font:600 18px var(--cond);margin:22px 0 6px}
+h3:first-child{margin-top:0}
+.prose{max-width:84ch}
+.prose p{margin:4px 0 10px;color:var(--muted)}
+.eqr{display:flex;align-items:center;gap:16px;justify-content:space-between;margin:4px 0 8px;overflow-x:auto}
+.eqr .m{min-width:0}
+.eqr .m mjx-container{margin:4px 0!important;text-align:left!important}
+.eqr .rf{font-size:12px;color:var(--muted);white-space:nowrap}
+.eqr .plain{font:13px ui-monospace,Menlo,Consolas,monospace}
+.note{font-size:12.5px;color:var(--muted)}
+.busy{opacity:.55;transition:opacity .15s}
+ol.refs{padding-left:22px;max-width:92ch}ol.refs li{margin:6px 0}
+@media (max-width:920px){.wrap{grid-template-columns:1fr}aside{border-right:0;border-bottom:1px solid var(--line)}.sum{grid-template-columns:1fr}main{padding:16px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+ <div><h1>Cantilever secant pile wall — laterally supported by foundation slab</h1><p>Lateral pressures, free-earth embedment, global checks and structural demands · FHWA NHI-07-071</p></div>
+ <div class="sp"></div>
+ <div class="acts">
+  <button class="btn2" id="exp" type="button">Save inputs</button>
+  <button class="btn2" id="imp" type="button">Load inputs</button>
+  <input type="file" id="impf" accept=".json,application/json" hidden>
+  <button class="btn2" id="sdx" type="button" title="Exact factored demands for secant_pile_structural_designer.html">Export structural demands</button>
+  <button class="btn" id="dl" type="button">Download PDF report</button>
+  <span class="dlnote" id="dlnote" role="status"></span>
+ </div>
+</header>
+<div class="wrap">
+ <aside id="inputs" aria-label="Inputs"></aside>
+ <main id="main">
+  <ul class="msgs" id="msgs"></ul>
+  <div id="summary"></div>
+  <div class="tabs" role="tablist" id="tabs">
+   <button role="tab" data-t="sec" aria-selected="true">Section and pressures</button>
+   <button role="tab" data-t="der" aria-selected="false">Calculations</button>
+   <button role="tab" data-t="calc" aria-selected="false">Calculation tables</button>
+   <button role="tab" data-t="plan" aria-selected="false">Pile layout</button>
+   <button role="tab" data-t="guide" aria-selected="false">Options guide</button>
+   <button role="tab" data-t="ref" aria-selected="false">References</button>
+  </div>
+  <section id="tab-sec"></section>
+  <section id="tab-der" hidden></section>
+  <section id="tab-calc" hidden></section>
+  <section id="tab-plan" hidden></section>
+  <section id="tab-guide" hidden></section>
+  <section id="tab-ref" hidden></section>
+ </main>
+</div>
+<script>
+/* =====================================================================
+   Secant pile wall engine v2 — single brace (foundation slab), free-earth
+   support about the brace. Units: ft, lb, psf, pcf. Elevation z (+ up).
+   Primary reference: FHWA NHI-07-071 Earth Retaining Structures (2007).
+   ===================================================================== */
+const GW = 62.4, MEFP = 30;                      // pcf; FHWA §3.6.2 minimum equivalent fluid pressure
+const rad = d => d * Math.PI / 180, deg = r => r * 180 / Math.PI;
+
+/* ---- Log-spiral passive (Caquot–Kerisel via NAVFAC; FHWA Fig. 3-12) ----
+   Vertical wall, level ground: Kp(φ,δ) = Kp,Rankine(φ) · R(φ,δ/φ) / R(φ,0),
+   R = reduction factor of Kp(δ = −φ). Rows φ; columns −δ/φ = 0.7…0.0.     */
+const LS_PHI = [10, 15, 20, 25, 30, 35, 40, 45];
+const LS_RAT = [1.0, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2, 0.1, 0.0];
+const LS_R = [
+  [1, .978, .962, .946, .929, .912, .898, .881, .864],
+  [1, .961, .934, .907, .881, .854, .830, .803, .775],
+  [1, .939, .901, .862, .824, .787, .752, .716, .678],
+  [1, .912, .860, .808, .759, .711, .666, .620, .574],
+  [1, .878, .811, .746, .686, .627, .574, .520, .467],
+  [1, .836, .752, .674, .603, .536, .475, .417, .362],
+  [1, .783, .682, .592, .512, .439, .375, .316, .262],
+  [1, .718, .600, .500, .414, .339, .276, .221, .174]];
+function lsR(phiDeg, ratio) {
+  const rr = Math.min(1, Math.max(0, ratio));
+  const rowAt = i => { // interpolate along δ/φ (descending table)
+    const t = LS_R[i];
+    for (let k = 0; k < LS_RAT.length - 1; k++) if (rr <= LS_RAT[k] && rr >= LS_RAT[k + 1]) { const f = (LS_RAT[k] - rr) / (LS_RAT[k] - LS_RAT[k + 1]); return t[k] + f * (t[k + 1] - t[k]); }
+    return t[t.length - 1];
+  };
+  const p = Math.min(45, Math.max(0, phiDeg));
+  if (p <= 10) { const r10 = rowAt(0); return 1 + (r10 - 1) * p / 10; } // R → 1 as φ → 0
+  for (let i = 0; i < LS_PHI.length - 1; i++) if (p <= LS_PHI[i + 1]) { const f = (p - LS_PHI[i]) / (LS_PHI[i + 1] - LS_PHI[i]); return rowAt(i) + f * (rowAt(i + 1) - rowAt(i)); }
+  return rowAt(LS_PHI.length - 1);
+}
+function kpLogSpiral(phi, dRatio) { // phi in rad; returns total (inclined) coefficient
+  const kpr = Math.tan(Math.PI / 4 + phi / 2) ** 2;
+  return kpr * lsR(deg(phi), dRatio) / lsR(deg(phi), 0);
+}
+
+/* ---- model ---- */
+function buildModel(I) {
+  const M = Object.assign({}, I);
+  const L = I.layers.map(l => Object.assign({}, l)).sort((a, b) => b.bot - a.bot);
+  L.forEach((l, i) => { l.botEff = i < L.length - 1 ? l.bot : -1e9; l.idx = i; });
+  M.L = L; M.cache = new Map(); M.toe = I.ze; M.seep = false; M.H = I.zr - I.ze;
+  M.bl = (I.bldg || []).filter(b => b.q > 0 && b.B > 0);
+  M.slab = slabRes(M); M.Rslab = M.slab.R;
+  M.LF = loadFactors(I);
+  return M;
+}
+function loadFactors(I) {
+  if (I.lfBasis === 'ACI') return { EH: 1.6, ES: 1.6, EB: 1.6, WA: 1.6, note: 'ACI 318-19 Table 5.3.1 / ASCE 7-22 §2.3: 1.6H (soil, water, surcharge and building loads treated as H)' };
+  const EH = I.cond === 'atrest' ? 1.35 : (I.cond === 'aepSand' || I.cond === 'aepClay') ? 1.35 : 1.50;
+  return { EH, ES: I.qType === 'LS' ? 1.75 : 1.50, EB: 1.50, WA: 1.00, note: 'AASHTO LRFD Strength I (FHWA Tables 4-1, 4-2): EH ' + (I.cond === 'atrest' ? 'at-rest 1.35' : EH === 1.35 ? 'apparent (AEP) 1.35' : 'active 1.50') + ', uniform q ' + (I.qType === 'LS' ? 'LS 1.75' : 'ES 1.50') + ', building (Boussinesq) ES 1.50, WA 1.00' };
+}
+function layerAt(M, z) { const L = M.L; for (let i = 0; i < L.length; i++) if (z > L[i].botEff) return i; return L.length - 1; }
+
+function soilP(M, i, Fs) {
+  const key = i + '|' + Fs; let p = M.cache.get(key); if (p) return p;
+  const l = M.L[i];
+  const phi = Math.atan(Math.tan(rad(l.phi)) / Fs), c = (l.c || 0) / Fs, su = (l.su || 0) / Fs;
+  const dA = phi * (M.dA || 0), dP = phi * (M.dP || 0);
+  const KaR = Math.tan(Math.PI / 4 - phi / 2) ** 2, KpR = Math.tan(Math.PI / 4 + phi / 2) ** 2;
+  let Ka = KaR, Kp = KpR;
+  if (M.thA === 'coulomb') { const s = Math.sqrt(Math.sin(phi + dA) * Math.sin(phi) / Math.cos(dA)); Ka = Math.cos(phi) ** 2 / (1 + s) ** 2; }
+  if (M.thP === 'coulomb') { const s = Math.sqrt(Math.sin(phi + dP) * Math.sin(phi) / Math.cos(dP)); Kp = Math.cos(phi) ** 2 / Math.max(1 - s, 0.02) ** 2; }
+  else if (M.thP === 'logspiral') Kp = kpLogSpiral(phi, M.dP || 0) * Math.cos(dP);
+  const K0 = (1 - Math.sin(phi)) * Math.pow(Math.max(1, l.ocr || 1), Math.sin(phi));
+  p = { phi: deg(phi), c, su, dA: deg(dA), dP: deg(dP), Ka, Kp, K0, KaR, KpR, sKa: Math.sqrt(Ka), sKp: Math.sqrt(Kp), U: l.type === 'U' };
+  M.cache.set(key, p); return p;
+}
+
+/* ---- pore pressure: hydrostatic or linear head loss around toe (FHWA Eq. 3-33, Fig. 3-22) ---- */
+function seepParams(M, toe) {
+  const zE = Math.min(M.wte, M.ze);
+  if (M.wtr > toe && zE > toe && M.wtr > M.wte) { const Lf = (M.wtr - toe) + (zE - toe); return { ok: true, zE, Lf, i: (M.wtr - M.wte) / Lf }; }
+  return { ok: false };
+}
+function setToe(M, toe) {
+  M.toe = toe; const s = seepParams(M, toe);
+  M.seep = M.water === 'seep' && s.ok; if (M.seep) { M.zE = s.zE; M.Lf = s.Lf; M.i = s.i; }
+}
+function uR(M, z) { if (z >= M.wtr) return 0; return M.seep ? GW * (M.wtr - z) * (1 - M.i) : GW * (M.wtr - z); }
+function uE(M, z) {
+  if (z >= M.wte) return 0;
+  if (M.seep && z <= M.zE) { const s = (M.wtr - M.toe) + (z - M.toe); return Math.max(0, GW * (M.wtr - M.i * s - z)); }
+  return GW * (M.wte - z);
+}
+function sigmaTot(M, zs, z, wt, q0) {
+  if (z >= zs) return q0;
+  const b = [zs, z]; for (const l of M.L) if (l.botEff < zs && l.botEff > z) b.push(l.botEff);
+  if (wt < zs && wt > z) b.push(wt);
+  b.sort((x, y) => y - x);
+  let s = q0;
+  for (let k = 0; k < b.length - 1; k++) { const a = b[k], c = b[k + 1]; if (a - c <= 0) continue; const mid = (a + c) / 2, l = M.L[layerAt(M, mid)]; s += (mid < wt ? l.gs : l.gm) * (a - c); }
+  return s;
+}
+
+/* ---- apparent earth pressure (FHWA Figs. 8-67, 8-68), above excavation grade ---- */
+function aepSetup(M) {
+  const H = M.H; if (H <= 0) return null;
+  const H1 = Math.min(H, Math.max(0, M.zr - M.zb));
+  let p, load;
+  if (M.cond === 'aepSand') {
+    // total load = 0.65 Ka γ' H² = 1.3 × Rankine active resultant over H  (layered generalisation)
+    const n = 200, dz = H / n; let Pa = 0;
+    for (let k = 0; k < n; k++) { const z = M.zr - (k + 0.5) * dz, P = soilP(M, layerAt(M, z), 1); const sv = Math.max(0, sigmaTot(M, M.zr, z, M.wtr, 0) - uR0(M, z)); Pa += Math.max(0, P.KaR * sv - 2 * P.c * Math.sqrt(P.KaR)) * dz; }
+    load = 1.3 * Pa; p = load / (2 * H / 3);
+  } else {
+    const gbar = sigmaTot(M, M.zr, M.ze, M.wtr, 0) / H; p = M.aepC * gbar * H; load = p * 2 * H / 3;
+  }
+  return { H, H1, p, load };
+}
+function uR0(M, z) { return z >= M.wtr ? 0 : GW * (M.wtr - z); }
+function aepOrd(A, d) { // d = depth below retained grade
+  if (!A || d < 0 || d > A.H) return 0;
+  const a = 2 / 3 * A.H1, b = a + A.H / 3;
+  if (d < a) return a > 0 ? A.p * d / a : A.p;
+  if (d <= b) return A.p;
+  const c = A.H - b; return c > 1e-9 ? A.p * (A.H - d) / c : A.p;
+}
+
+/* ---- lateral pressures (earth part = total − u; totals clipped ≥ 0) ---- */
+function drive(M, z, Fs, qOn) { // retained side, driving state; returns earth-equivalent (psf)
+  if (z >= M.zr) return 0;
+  const P = soilP(M, layerAt(M, z), Fs), q = qOn ? M.q : 0;
+  const sv = sigmaTot(M, M.zr, z, M.wtr, q), u = uR(M, z), svp = Math.max(0, sv - u);
+  const act = () => P.U ? Math.max(0, sv - 2 * P.su) - u : Math.max(0, P.Ka * svp - 2 * P.c * P.sKa);
+  const rest = () => P.K0 * svp;
+  let e;
+  if (M.cond === 'active') e = act();
+  else if (M.cond === 'atrest') e = rest();
+  else if (M.cond === 'avg') e = 0.5 * (act() + rest());
+  else { // AEP above excavation grade, theoretical active below
+    if (z >= M.ze) e = aepOrd(M.aep, M.zr - z) + P.KaR * q;
+    else e = act();
+  }
+  if (M.mefp && M.cond !== 'atrest') e = Math.max(e, MEFP * (M.zr - z) - u);
+  return e;
+}
+/* ---- building surcharges: Boussinesq strip load on a non-yielding wall (AASHTO Eq. 3.11.6.2-1; FHWA §3.7) ----
+   Δp_h = (2Q/π)[β − sin β cos(β + 2θ1)], θ1 = atan(x1/d), θ2 = atan((x1+B)/d), β = θ2 − θ1, d = z_f − z.
+   The factor 2 is the elastic half-space solution doubled for a rigid (non-yielding) wall.            */
+function bousOne(b, z) {
+  const d = b.zf - z; if (d <= 1e-9 || !(b.q > 0) || !(b.B > 0)) return 0;
+  const t1 = Math.atan(Math.max(0, b.x) / d), t2 = Math.atan((Math.max(0, b.x) + b.B) / d), be = t2 - t1;
+  return 2 * b.q / Math.PI * (be - Math.sin(be) * Math.cos(be + 2 * t1));
+}
+function bous(M, z) { let s = 0; for (const b of M.bl) s += bousOne(b, z); return s; }
+function passRet(M, z, Fs) { if (z >= M.zr) return 0; const P = soilP(M, layerAt(M, z), Fs); const sv = sigmaTot(M, M.zr, z, M.wtr, M.q), u = uR(M, z); return P.U ? sv + 2 * P.su - u : P.Kp * Math.max(0, sv - u) + 2 * P.c * P.sKp; }
+function svE(M, z) { return sigmaTot(M, M.ze, z, M.wte, GW * Math.max(0, M.wte - M.ze)); }
+function passExc(M, z, Fs) { if (z >= M.ze) return 0; const P = soilP(M, layerAt(M, z), Fs); const sv = svE(M, z), u = uE(M, z); return P.U ? sv + 2 * P.su - u : P.Kp * Math.max(0, sv - u) + 2 * P.c * P.sKp; }
+function actExc(M, z, Fs) { if (z >= M.ze) return 0; const P = soilP(M, layerAt(M, z), Fs); const sv = svE(M, z), u = uE(M, z); return P.U ? Math.max(0, sv - 2 * P.su) - u : Math.max(0, P.Ka * Math.max(0, sv - u) - 2 * P.c * P.sKa); }
+
+/* pointwise components; sign + = toward excavation.
+   Mode A: toe kicks toward excavation (passive in front).
+   Mode B: toe swings into retained soil (passive behind, below brace).   */
+function comps(M, z, mode, Fs) {
+  const wa = uR(M, z) - uE(M, z);
+  if (mode === 'A') { const e0 = drive(M, z, Fs, false), e1 = drive(M, z, Fs, true); return { eh: e0, es: e1 - e0, bs: bous(M, z), wa, pp: -passExc(M, z, Fs) }; }
+  if (z >= M.zb) { const e0 = drive(M, z, Fs, false), e1 = drive(M, z, Fs, true); return { eh: e0 - actExc(M, z, Fs), es: e1 - e0, bs: bous(M, z), wa, pp: 0 }; }
+  // mode B below the brace: retained soil resists (passive); building pressure there would help, so it is ignored
+  return { eh: -actExc(M, z, Fs), es: 0, bs: 0, wa, pp: passRet(M, z, Fs) };
+}
+function breakpoints(M) {
+  const a = [M.top, M.zr, M.ze, M.zb, M.wtr, M.wte, M.toe];
+  if (M.seep) a.push(M.zE);
+  if (M.aep) { const A = M.aep; a.push(M.zr - 2 / 3 * A.H1, M.zr - 2 / 3 * A.H1 - A.H / 3); }
+  M.L.forEach(l => a.push(l.botEff));
+  M.bl.forEach(b => a.push(b.zf));
+  const f = a.filter(z => z <= M.top + 1e-9 && z >= M.toe - 1e-9).sort((x, y) => y - x);
+  const u = []; f.forEach(z => { if (!u.length || u[u.length - 1] - z > 1e-7) u.push(z); });
+  return u;
+}
+function analyze(M, D, mode, Fs, h = 0.25) {
+  setToe(M, M.ze - D);
+  const b = breakpoints(M), R = { eh: [0, 0], es: [0, 0], bs: [0, 0], wa: [0, 0], pp: [0, 0] };
+  for (let k = 0; k < b.length - 1; k++) {
+    const a = b[k], c = b[k + 1], n = Math.max(1, Math.ceil((a - c) / h)), dz = (a - c) / n;
+    for (let j = 0; j < n; j++) {
+      const z = a - (j + 0.5) * dz, arm = M.zb - z, p = comps(M, z, mode, Fs);
+      for (const key of ['eh', 'es', 'bs', 'wa', 'pp']) { R[key][0] += p[key] * dz; R[key][1] += p[key] * arm * dz; }
+    }
+  }
+  return R;
+}
+const npF = (R, f) => f.EH * R.eh[0] + f.ES * R.es[0] + f.EB * R.bs[0] + f.WA * R.wa[0];
+const npM = (R, f) => f.EH * R.eh[1] + f.ES * R.es[1] + f.EB * R.bs[1] + f.WA * R.wa[1];
+const UNIT = { EH: 1, ES: 1, EB: 1, WA: 1 };
+// capacity ratio for a mode: (resisting moment × resistance factor) / driving moment; ∞ if the mode is not a mechanism
+function modeRatio(M, D, mode, Fs, f, phi) {
+  const R = analyze(M, D, mode, Fs), Mo = npM(R, f), Mp = R.pp[1];
+  if (mode === 'A') return Mo > 1e-6 ? phi * (-Mp) / Mo : Infinity;
+  return Mo < -1e-6 ? phi * Mp / (-Mo) : Infinity;
+}
+function rotCheck(M, D) { // returns {r (≥1 passes), mode, rA, rB}
+  let rA, rB;
+  if (M.meth === 'Fp') { rA = modeRatio(M, D, 'A', 1, UNIT, 1) / M.FSp; rB = modeRatio(M, D, 'B', 1, UNIT, 1) / M.FSp; }
+  else if (M.meth === 'Fs') { rA = modeRatio(M, D, 'A', M.FSs, UNIT, 1); rB = modeRatio(M, D, 'B', M.FSs, UNIT, 1); }
+  else { rA = modeRatio(M, D, 'A', 1, M.LF, M.phiP); rB = modeRatio(M, D, 'B', 1, M.LF, M.phiP); }
+  return { r: Math.min(rA, rB), mode: rA <= rB ? 'A' : 'B', rA, rB };
+}
+/* ---- slab sliding resistance: self-weight friction on the bearing soil (AASHTO 10.6.3.4) ----
+   N = (γc·t − uplift)·Bs per ft of wall; drained: R = N·tan δ, tan δ = f·tan φ′; undrained: R = min(su·Bs, N/2). */
+function slabRes(M) {
+  const t = M.slabT, zBase = M.zb - t / 2, Bs = M.slabB, W = M.gc * t * Bs;
+  const hw = Math.max(0, Math.min(M.wte, zBase + t) - zBase), U = GW * hw * Bs, N = Math.max(0, W - U);
+  const l = M.L[layerAt(M, zBase - 0.01)];
+  if (l.type === 'U') { const Rc = l.su * Bs, Rn = 0.5 * N; return { t, zBase, Bs, W, U, N, layer: l.name, U_: true, su: l.su, Rc, Rn, R: Math.min(Rc, Rn) }; }
+  const mu = M.muF * Math.tan(rad(l.phi));
+  return { t, zBase, Bs, W, U, N, layer: l.name, U_: false, phi: l.phi, mu, R: mu * N };
+}
+function slide(M, D) {
+  const R = analyze(M, D, 'A', 1), Pp = -R.pp[0], Fd = npF(R, UNIT);
+  return { Pp, Fd, FS: Fd > 1e-6 ? (Pp + M.Rslab) / Fd : Infinity };
+}
+// smallest D that passes and keeps passing over a window W beyond it (handles non-monotonic factors,
+// e.g. sliding FS dipping at shallow D, or clay profiles whose factor slowly declines at great depth)
+function solveRobust(pass, Dmax, W, step = 0.5) {
+  const n = Math.floor(Dmax / step), ok = [];
+  for (let k = 0; k <= n; k++) ok.push(pass(k * step));
+  const w = Math.max(1, Math.round(W / step));
+  for (let k = 0; k <= n; k++) {
+    let all = true; for (let j = k; j <= Math.min(n, k + w); j++) if (!ok[j]) { all = false; break; }
+    if (!all) continue;
+    if (k === 0) return 0;
+    let lo = (k - 1) * step, hi = k * step;
+    for (let t = 0; t < 28; t++) { const m = (lo + hi) / 2; if (pass(m)) hi = m; else lo = m; }
+    return hi;
+  }
+  return NaN;
+}
+const ceilTo = (x, s) => s > 0 ? Math.ceil(x / s - 1e-9) * s : x;
+function achieved(M, D) { // report the factor actually provided at D in the chosen method's own terms
+  if (M.meth === 'Fp') { const a = modeRatio(M, D, 'A', 1, UNIT, 1), b = modeRatio(M, D, 'B', 1, UNIT, 1); return Math.min(a, b); }
+  if (M.meth === 'LRFD') { const a = modeRatio(M, D, 'A', 1, M.LF, M.phiP), b = modeRatio(M, D, 'B', 1, M.LF, M.phiP); return Math.min(a, b); } // CDR
+  const g = F => Math.min(modeRatio(M, D, 'A', F, UNIT, 1), modeRatio(M, D, 'B', F, UNIT, 1));
+  if (!isFinite(g(1))) return Infinity;
+  let lo = 0.3, hi = 6; if (g(hi) >= 1) return hi; if (g(lo) < 1) return lo;
+  for (let k = 0; k < 40; k++) { const m = (lo + hi) / 2; if (g(m) >= 1) lo = m; else hi = m; }
+  return lo;
+}
+
+function validate(I) {
+  const e = [], w = [];
+  const num = (v, n) => { if (!isFinite(v)) e.push(n + ' must be a number.'); };
+  ['top', 'zr', 'ze', 'zb', 'wtr', 'wte', 'q', 'dia', 'sp', 'slabT', 'slabB', 'gc', 'muF', 'Dmin', 'inc', 'round', 'FSsl'].forEach(k => num(I[k], k));
+  if (!(I.zr <= I.top)) e.push('Retained grade must be at or below the top of wall.');
+  if (!(I.ze < I.zr)) e.push('Excavation grade must be below the retained grade.');
+  if (!(I.zb >= I.ze && I.zb <= I.top)) e.push('Brace level must lie between the excavation grade and the top of wall.');
+  if (!(I.wtr <= I.zr)) e.push('Water level behind the wall cannot be above the retained grade.');
+  if (!(I.dia > 0 && I.sp > 0)) e.push('Pile diameter and spacing must be positive.');
+  else if (I.sp >= I.dia) e.push('Spacing must be less than the pile diameter so the piles overlap (secant).');
+  else if ((I.dia - I.sp) / I.dia < 0.1) w.push('Overlap is under 10% of the diameter; check verticality tolerance for a continuous wall at depth.');
+  if (I.q < 0) e.push('Surcharge cannot be negative.');
+  if (!(I.slabT > 0 && I.slabB > 0 && I.gc > 0)) e.push('Slab thickness, slab width and concrete unit weight must be positive.');
+  if (!(I.muF > 0 && I.muF <= 1)) e.push('Slab friction factor tan δ / tan φ′ must be between 0 and 1.');
+  (I.bldg || []).forEach((b, i) => {
+    const n = `Building load ${i + 1} (${b.name || ''})`;
+    if (!(b.q >= 0)) e.push(`${n}: bearing pressure cannot be negative.`);
+    if (!(b.B > 0)) e.push(`${n}: footing width must be positive.`);
+    if (!(b.x >= 0)) e.push(`${n}: offset from the wall cannot be negative.`);
+    if (!(b.zf <= I.zr)) e.push(`${n}: footing bearing elevation must be at or below the retained grade.`);
+  });
+  if (!I.layers.length) e.push('Define at least one soil layer.');
+  I.layers.forEach((l, i) => {
+    const n = `Layer ${i + 1} (${l.name || ''})`;
+    if (!(l.gm > 0 && l.gs > 0)) e.push(`${n}: unit weights must be positive.`);
+    if (!(l.phi >= 0 && l.phi <= 50)) e.push(`${n}: φ′ must be between 0° and 50°.`);
+    if (l.type === 'U' && !(l.su > 0)) e.push(`${n}: undrained layers need su > 0.`);
+    if (l.gs < GW) w.push(`${n}: γsat is below the unit weight of water.`);
+    if (l.type !== 'U' && l.c > 100) w.push(`${n}: c′ > 100 psf gives a deep zone of negative active pressure; FHWA §3.6.2.2 recommends reducing c′ or applying the 30 pcf minimum.`);
+    if (l.phi > 45 && I.thP === 'logspiral') w.push(`${n}: log-spiral table ends at 45°; values are held at 45°.`);
+  });
+  const bots = I.layers.slice(0, -1).map(l => l.bot);
+  for (let i = 1; i < bots.length; i++) if (!(bots[i] < bots[i - 1])) e.push('Layer bottom elevations must decrease downward.');
+  if (I.thA === 'coulomb' && I.dA > 2 / 3 + 1e-9) w.push('δa/φ′ above 2/3 exceeds the FHWA §3.6.1.2 maximum.');
+  if (I.thP === 'coulomb' && I.dP > 1 / 3 + 1e-9) w.push('Coulomb passive with δp/φ′ above 1/3 is unconservative (FHWA §3.2.5, §3.6.1.2). Use log-spiral.');
+  if (I.thP === 'logspiral' && I.dP > 0.5 + 1e-9) w.push('δp/φ′ above 1/2 exceeds the FHWA §3.6.1.2 maximum for log-spiral passive.');
+  if (I.cond === 'aepClay' && I.wtr > I.ze) w.push('FHWA §8.11.2.2: the stiff-clay apparent diagram assumes no free water. Water above the excavation grade is added explicitly; consider the sand diagram with drained φ′.');
+  if ((I.cond === 'aepSand' || I.cond === 'aepClay') && I.zb - I.ze < 0.2 * (I.zr - I.ze)) w.push('Apparent pressure diagrams (FHWA Figs. 8-67/8-68) were derived for supports in the upper part of the wall; with the brace near the excavation grade, theoretical pressures are more appropriate.');
+  if (I.wte > I.ze) w.push('Water in front of the wall is above the excavation grade (standing water acts on the wall).');
+  if (I.meth === 'Fp' && I.FSp < 1.5) w.push('FHWA §8.9.2.4: minimum ASD factor of safety on passive resistance is 1.5.');
+  return { e, w };
+}
+
+/* ---- main design routine ---- */
+function design(I) {
+  const V = validate(I); if (V.e.length) return { errors: V.e, warnings: V.w };
+  const M = buildModel(I), H = M.H, Dmax = Math.max(120, 5 * (I.top - I.ze));
+  M.aep = (I.cond === 'aepSand' || I.cond === 'aepClay') ? aepSetup(M) : null;
+  const passOT = D => rotCheck(M, D).r >= 1 - 1e-9;
+  const passSL = D => slide(M, D).FS >= I.FSsl - 1e-9;
+  const W = Math.max(10, 0.5 * H), Dot = solveRobust(passOT, Dmax, W), Dsl = solveRobust(passSL, Dmax, W);
+  const warnings = V.w.slice(), errors = [];
+  if (isNaN(Dot)) errors.push(`No embedment up to ${Dmax.toFixed(0)} ft satisfies rotation about the brace. Check brace level, strengths or the required factor.`);
+  if (isNaN(Dsl)) errors.push(`No embedment up to ${Dmax.toFixed(0)} ft satisfies sliding. Review the slab lateral resistance used for sliding or the loads.`);
+  if (errors.length) return { errors, warnings };
+  const Dreq = Math.max(Dot, Dsl);
+  let Dd = Math.max(I.Dmin, ceilTo(Dreq * (1 + I.inc / 100), I.round));
+  const stp = I.round > 0 ? I.round : 0.25;
+  for (let k = 0; k < 4000 && !(passOT(Dd) && passSL(Dd)); k++) Dd += stp;
+  const toe = I.ze - Dd;
+
+  // --- checks at design embedment
+  const rot = rotCheck(M, Dd), prov = achieved(M, Dd), sl = slide(M, Dd);
+  const g1A = modeRatio(M, Dd, 'A', 1, UNIT, 1), g1B = modeRatio(M, Dd, 'B', 1, UNIT, 1);
+  const mode = g1A <= g1B ? 'A' : 'B';
+  const Rs = analyze(M, Dd, mode, 1, 0.1);
+
+  // --- equilibrium for demands: passive scaled (λ) so ΣM_brace = 0; slab from ΣH = 0
+  const balance = f => {
+    const Mo = npM(Rs, f), Mp = Rs.pp[1];
+    let lam = mode === 'A' ? Mo / (-Mp) : (-Mo) / Mp;
+    if (!isFinite(lam) || lam < 0) lam = 0;
+    return { lam, R: npF(Rs, f) + lam * Rs.pp[0], Mo };
+  };
+  const svc = balance(UNIT), fac = balance(M.LF);
+  if (svc.lam === 0) warnings.push('No rotational mechanism about the brace at the design embedment; diagrams assume no passive mobilised.');
+  if (svc.R < 0) warnings.push('Slab reaction is negative (tension): the slab–wall connection must resist pull, or the wall acts as a cantilever.');
+  if (mode === 'B') warnings.push('Governing mechanism is rotation about the slab with the toe moving into the retained soil (brace low on the wall). Confirm the slab is a true lateral support and that the cantilever above it is intended; consider an SSI (beam-on-springs) check.');
+
+  // --- profiles (service) and V/M (service & factored)
+  setToe(M, toe);
+  const bp = breakpoints(M);
+  const grid = (N) => { const z = []; for (let k = 0; k <= N; k++) z.push(I.top - (I.top - toe) * k / N); return z; };
+  const zs = grid(500); bp.forEach(z => { zs.push(z + 1e-4, z - 1e-4); });
+  const prof = zs.filter(z => z <= I.top && z >= toe).sort((a, b) => b - a).map(z => {
+    const p = comps(M, z, mode, 1);
+    const drv = (mode === 'A' || z >= I.zb) ? drive(M, z, 1, true) : 0;
+    const eAct = mode === 'B' ? -actExc(M, z, 1) : 0;
+    return { z, drive: drv + p.bs, bs: p.bs, w: p.wa, pAv: p.pp, pMob: svc.lam * p.pp, eAct, net: p.eh + p.es + p.bs + p.wa + svc.lam * p.pp, netF: M.LF.EH * p.eh + M.LF.ES * p.es + M.LF.EB * p.bs + M.LF.WA * p.wa + fac.lam * p.pp };
+  });
+  const nd = grid(2400); bp.forEach(z => nd.push(z));
+  const nodes = nd.filter(z => z <= I.top && z >= toe).sort((a, b) => b - a).filter((z, i, a) => i === 0 || a[i - 1] - z > 1e-7);
+  const vm = (f, lam, R) => {
+    const out = []; let V = 0, Mm = 0; out.push({ z: nodes[0], V: 0, M: 0 });
+    if (Math.abs(nodes[0] - I.zb) < 1e-7) { V = -R; out.push({ z: nodes[0], V, M: 0 }); }
+    for (let k = 0; k < nodes.length - 1; k++) {
+      const a = nodes[k], b = nodes[k + 1], dz = a - b, p = comps(M, (a + b) / 2, mode, 1);
+      const pn = f.EH * p.eh + f.ES * p.es + f.EB * p.bs + f.WA * p.wa + lam * p.pp;
+      const V0 = V; V += pn * dz; Mm += 0.5 * (V0 + V) * dz; out.push({ z: b, V, M: Mm });
+      if (Math.abs(b - I.zb) < 1e-7) { V -= R; out.push({ z: b, V, M: Mm }); }
+    }
+    let Vmax = 0, zV = I.top, Mp = 0, zMp = I.top, Mn = 0, zMn = I.top;
+    out.forEach(p => { if (Math.abs(p.V) > Math.abs(Vmax)) { Vmax = p.V; zV = p.z; } if (p.M > Mp) { Mp = p.M; zMp = p.z; } if (p.M < Mn) { Mn = p.M; zMn = p.z; } });
+    return { pts: out, Vmax, zV, Mpos: Mp, zMp, Mneg: Mn, zMn, Mmax: Math.max(Mp, -Mn) };
+  };
+  const S = vm(UNIT, svc.lam, svc.R), Fd = vm(M.LF, fac.lam, fac.R);
+
+  // --- component resultants (governing mode, service)
+  const compTab = [];
+  const pushC = (name, F, Mo, role) => compTab.push({ name, F, Mo, zc: Math.abs(F) > 1e-6 ? I.zb - Mo / F : NaN, role });
+  pushC(mode === 'A' ? 'Earth pressure, retained side (EH)' : 'Earth: retained above slab − front active (EH)', Rs.eh[0], Rs.eh[1], 'driving');
+  pushC('Uniform surcharge q (' + (I.qType === 'LS' ? 'LS' : 'ES') + ')', Rs.es[0], Rs.es[1], 'driving');
+  if (M.bl.length) pushC('Building surcharge, Boussinesq (ES)', Rs.bs[0], Rs.bs[1], 'driving');
+  pushC('Net water uR − uE (WA)', Rs.wa[0], Rs.wa[1], 'driving');
+  pushC(mode === 'A' ? 'Passive in front, available' : 'Passive behind below slab, available', Rs.pp[0], Rs.pp[1], 'resisting');
+  pushC('Passive mobilised, λ·Pp (service)', svc.lam * Rs.pp[0], svc.lam * Rs.pp[1], 'mobilised');
+
+  // --- overturning (about the slab) and sliding, service, governing mode; moments signed so driving > 0
+  const sg = mode === 'A' ? 1 : -1;
+  const ot = { MO: sg * svc.Mo, MR: -sg * Rs.pp[1], MOu: sg * npM(Rs, M.LF), c: { eh: sg * Rs.eh[1], es: sg * Rs.es[1], bs: sg * Rs.bs[1], wa: sg * Rs.wa[1] } };
+  ot.FS = ot.MO > 1e-9 ? ot.MR / ot.MO : Infinity;
+
+  // --- building loads: Boussinesq resultant on the retained face, footing base to toe (service)
+  const bld = M.bl.map(b => {
+    const zt = Math.min(b.zf, I.top), n = 800, dz = (zt - toe) / n; let P = 0, Mz = 0, pmax = 0, zmax = zt;
+    for (let k = 0; k < n; k++) { const z = zt - (k + 0.5) * dz, p = bousOne(b, z); P += p * dz; Mz += p * z * dz; if (p > pmax) { pmax = p; zmax = z; } }
+    return { b, P, zc: P > 0 ? Mz / P : NaN, pmax, zmax };
+  });
+
+  // --- FHWA hinge / tributary brace loads (Fig. 8-70), service, loads above excavation grade
+  let hinge = null;
+  if (I.zb - I.ze >= 0.25 * H) {
+    let P = 0, Mc = 0, Pt = 0; const zm = (I.zb + I.ze) / 2, n = 400, dz = (I.top - I.ze) / n;
+    for (let k = 0; k < n; k++) { const z = I.top - (k + 0.5) * dz, p = comps(M, z, 'A', 1), pn = p.eh + p.es + p.bs + p.wa; P += pn * dz; Mc += pn * (z - I.ze) * dz; if (z >= zm) Pt += pn * dz; }
+    hinge = { P, T: Mc / (I.zb - I.ze), Tt: Pt }; hinge.R = P - hinge.T; hinge.Rt = P - Pt;
+  }
+
+  // --- coefficient table
+  const coef = M.L.map((l, i) => ({ l, top: i === 0 ? null : M.L[i - 1].bot, bot: i < M.L.length - 1 ? l.bot : null, u: soilP(M, i, 1), f: I.meth === 'Fs' ? soilP(M, i, I.FSs) : null }));
+
+  // --- key-elevation pressure table (service)
+  const keys = [];
+  const add = (z, t) => { if (z <= I.top + 1e-9 && z >= toe - 1e-9) keys.push({ z, t }); };
+  if (I.top > I.zr) add(I.top, 'Top of wall');
+  add(I.zr, 'Retained grade'); add(I.wtr, 'Water behind wall');
+  M.L.slice(0, -1).forEach(l => { if (l.bot < I.zr && l.bot > toe) { add(l.bot + 1e-6, l.name + ', bottom'); add(l.bot - 1e-6, M.L[layerAt(M, l.bot - 0.01)].name + ', top'); } });
+  if (M.aep) { const A = M.aep; [2 / 3 * A.H1, 2 / 3 * A.H1 + A.H / 3].forEach((d, j) => add(I.zr - d, j ? 'AEP ramp start' : 'AEP plateau start')); }
+  add(I.zb, 'Brace (slab)'); add(I.ze, 'Excavation grade');
+  if (I.wte < I.ze) add(I.wte, 'Water in front');
+  M.bl.forEach((b, j) => { if (b.zf < I.zr) add(b.zf, 'Footing base, ' + (b.name || 'bldg ' + (j + 1))); });
+  add(toe, 'Pile toe');
+  keys.sort((a, b) => b.z - a.z);
+  const rows = keys.filter((k, i, a) => i === 0 || Math.abs(a[i - 1].z - k.z) > 1e-9 || a[i - 1].t !== k.t).map(k => {
+    const z = k.z, zz = Math.abs(z - toe) < 1e-9 ? z + 1e-6 : Math.abs(z - I.top) < 1e-9 ? z - 1e-6 : z;
+    const li = layerAt(M, zz), P = soilP(M, li, 1), ret = zz < I.zr, exc = zz < I.ze;
+    const sv = ret ? sigmaTot(M, I.zr, zz, I.wtr, I.q) : 0, ur = uR(M, zz);
+    const e0 = drive(M, zz, 1, false), e1 = drive(M, zz, 1, true), sB = bous(M, zz);
+    return { z, t: k.t, layer: ret ? M.L[li].name : '—', U: P.U, sv, ur, svp: Math.max(0, sv - ur), sSoil: e0, sQ: e1 - e0, sB, sDrive: e1 + sB, tot: e1 + sB + ur, ue: uE(M, zz), svE: exc ? svE(M, zz) : 0, pE: exc ? passExc(M, zz, 1) : 0, pR: mode === 'B' && ret && zz < I.zb ? passRet(M, zz, 1) : NaN, aE: mode === 'B' && exc ? actExc(M, zz, 1) : NaN };
+  });
+
+  // --- basal heave & stability number (FHWA §8.11.10.1, §8.11.4)
+  const lb = M.L[layerAt(M, I.ze - 0.01)];
+  let basal = { applicable: false, layer: lb.name };
+  if (lb.type === 'U') {
+    // One-sided cantilever retaining wall: no opposing wall, so the heave block is unbounded in width
+    // (FHWA Eq. 8-10, Nc = 5.14). A stiff stratum at depth Dst below the excavation limits the block (Eq. 8-9).
+    const gbar = sigmaTot(M, I.zr, I.ze, I.wtr, 0) / H, su = lb.su, Nc = 5.14;
+    const Bp = I.Dst > 0 ? I.Dst : Infinity;
+    const dem = gbar * H + I.q - (isFinite(Bp) ? su * H / Bp : 0);
+    basal = { applicable: true, layer: lb.name, su, gbar, Nc, Bp, FS: dem > 0 ? Nc * su / dem : Infinity, Ns: gbar * H / su, H };
+    if (basal.Ns > 4) warnings.push(`Stability number Ns = γH/su = ${basal.Ns.toFixed(2)} > 4 in "${lb.name}": passive resistance below the excavation cannot exceed the active load (FHWA §8.11.4). Limit embedment to ~0.2H unless needed for cut-off/axial load, and design as a cantilever from the slab or by SSI.`);
+  }
+  // --- hydraulic heave (sand) — linear head loss (FHWA Eq. 3-33/3-34), average exit gradient
+  let hyd = { applicable: false };
+  { const s = seepParams(M, toe); if (s.ok && lb.type !== 'U') { const icr = (lb.gs - GW) / GW; hyd = { applicable: true, i: s.i, Lf: s.Lf, icr, FS: icr / s.i, layer: lb.name }; } }
+
+  // --- secant geometry & stiffness
+  const r_in = I.dia / 2, ov = I.dia - I.sp, t_in = 2 * Math.sqrt(Math.max(0, r_in * r_in - (I.sp / 2) ** 2));
+  const b_ft = (I.pat === 'alt' ? 2 : 1) * I.sp / 12;
+  const Ec = 57000 * Math.sqrt(I.fc * 1000), Ig = Math.PI * I.dia ** 4 / 64, Ie = I.crack * Ig;
+  const L_m = (I.top - toe) * 0.3048, E_MPa = Ec * 0.00689476, I_m4pm = Ie * 4.162314e-7 / (b_ft * 0.3048);
+  const rho = 10.91e-7 * L_m ** 4 / (E_MPa * I_m4pm);
+
+  // --- primary (unreinforced) pile demand: factored net lateral pressure it spans horizontally between reinforced piles
+  let pw = { wu: 0, z: I.top, ws: 0 };
+  prof.forEach(p => { if (Math.abs(p.netF) > pw.wu) pw = { wu: Math.abs(p.netF), z: p.z, ws: Math.abs(p.net) }; });
+
+  return {
+    I, M, errors: [], warnings, mode, pw, rot, prov, Dot, Dsl, Dreq, Dd, toe, len: I.top - toe, FSsl: sl.FS, sl, g1A, g1B,
+    Rs, svc, fac, S, F: Fd, prof, ot, bld, slab: M.slab, compTab, hinge, coef, rows, basal, hyd, LF: M.LF, aep: M.aep,
+    geom: { r_in, ov, t_in, b_ft, Ec, Ig, Ie, rho, logrho: Math.log10(rho) },
+    per: { M: S.Mmax * b_ft / 1000, V: Math.abs(S.Vmax) * b_ft / 1000, Mu: Fd.Mmax * b_ft / 1000, Vu: Math.abs(Fd.Vmax) * b_ft / 1000, R: svc.R / 1000, Ru: fac.R / 1000 }
+  };
+}
+
+;
+/* ==== Figures: one primitive list rendered to SVG (screen) and to jsPDF (report) ==== */
+const PDFC = {
+  ink: [28, 34, 38], muted: [94, 103, 108], grid: [200, 205, 201], act: [180, 70, 47], pas: [60, 122, 85], wat: [47, 111, 163],
+  conc: [140, 148, 152], concF: [214, 217, 214], netF: [226, 229, 226], wall: [120, 128, 132], paper: [255, 255, 255],
+  s0: [233, 214, 170], s1: [218, 196, 150], s2: [204, 184, 150], s3: [192, 172, 140], s4: [220, 206, 180],
+  actF: [242, 214, 206], pasF: [210, 230, 216], watF: [208, 224, 238], sec: [168, 176, 180]
+};
+function Fig(w, h) { this.w = w; this.h = h; this.it = []; }
+Fig.prototype.line = function (x1, y1, x2, y2, o = {}) { this.it.push({ k: 'l', x1, y1, x2, y2, c: o.c || 'ink', lw: o.lw || 1, dash: o.dash }); return this; };
+Fig.prototype.poly = function (pts, o = {}) { this.it.push({ k: 'p', pts, f: o.f, c: o.c, lw: o.lw || 1, dash: o.dash, open: o.open }); return this; };
+Fig.prototype.rect = function (x, y, w, h, o = {}) { return this.poly([[x, y], [x + w, y], [x + w, y + h], [x, y + h]], o); };
+Fig.prototype.circ = function (cx, cy, r, o = {}) { this.it.push({ k: 'c', cx, cy, r, f: o.f, c: o.c, lw: o.lw || 1 }); return this; };
+Fig.prototype.text = function (x, y, s, o = {}) { this.it.push({ k: 't', x, y, s: String(s), size: o.size || 11, a: o.a || 'start', c: o.c || 'ink', b: o.b, rot: o.rot || 0 }); return this; };
+const escX = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+Fig.prototype.svg = function () {
+  const v = t => `var(--f-${t})`;
+  let o = `<svg viewBox="0 0 ${this.w} ${this.h}" xmlns="http://www.w3.org/2000/svg" role="img" style="width:100%;height:auto;display:block">`;
+  for (const e of this.it) {
+    if (e.k === 'l') o += `<line x1="${e.x1.toFixed(1)}" y1="${e.y1.toFixed(1)}" x2="${e.x2.toFixed(1)}" y2="${e.y2.toFixed(1)}" style="stroke:${v(e.c)};stroke-width:${e.lw}${e.dash ? ';stroke-dasharray:' + e.dash.join(' ') : ''}"/>`;
+    else if (e.k === 'p') { const d = e.pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('') + (e.open ? '' : 'Z'); o += `<path d="${d}" style="fill:${e.f ? v(e.f) : 'none'};stroke:${e.c ? v(e.c) : 'none'};stroke-width:${e.lw}${e.dash ? ';stroke-dasharray:' + e.dash.join(' ') : ''};stroke-linejoin:round"/>`; }
+    else if (e.k === 'c') o += `<circle cx="${e.cx.toFixed(1)}" cy="${e.cy.toFixed(1)}" r="${e.r.toFixed(1)}" style="fill:${e.f ? v(e.f) : 'none'};stroke:${e.c ? v(e.c) : 'none'};stroke-width:${e.lw}"/>`;
+    else if (e.k === 't') o += `<text x="${e.x.toFixed(1)}" y="${e.y.toFixed(1)}" text-anchor="${e.a}" style="fill:${v(e.c)};font-size:${e.size}px;${e.b ? 'font-weight:600;' : ''}"${e.rot ? ` transform="rotate(${-e.rot} ${e.x.toFixed(1)} ${e.y.toFixed(1)})"` : ''}>${escX(e.s)}</text>`;
+  }
+  return o + '</svg>';
+};
+Fig.prototype.pdf = function (doc, x0, y0, wmm) {
+  const s = wmm / this.w, X = x => x0 + x * s, Y = y => y0 + y * s;
+  const col = t => PDFC[t] || PDFC.ink;
+  for (const e of this.it) {
+    if (e.k === 'l') {
+      doc.setDrawColor(...col(e.c)); doc.setLineWidth(e.lw * s * 0.9);
+      doc.setLineDashPattern(e.dash ? e.dash.map(d => d * s) : [], 0);
+      doc.line(X(e.x1), Y(e.y1), X(e.x2), Y(e.y2));
+    } else if (e.k === 'p') {
+      const p = e.pts; if (p.length < 2) continue;
+      const segs = []; for (let i = 1; i < p.length; i++) segs.push([(p[i][0] - p[i - 1][0]) * s, (p[i][1] - p[i - 1][1]) * s]);
+      let st = null; if (e.f && e.c) st = 'FD'; else if (e.f) st = 'F'; else if (e.c) st = 'S'; if (!st) continue;
+      if (e.f) doc.setFillColor(...col(e.f)); if (e.c) doc.setDrawColor(...col(e.c));
+      doc.setLineWidth(e.lw * s * 0.9); doc.setLineDashPattern(e.dash ? e.dash.map(d => d * s) : [], 0);
+      doc.lines(segs, X(p[0][0]), Y(p[0][1]), [1, 1], st, !e.open);
+    } else if (e.k === 'c') {
+      let st = e.f && e.c ? 'FD' : e.f ? 'F' : 'S';
+      if (e.f) doc.setFillColor(...col(e.f)); if (e.c) doc.setDrawColor(...col(e.c));
+      doc.setLineWidth(e.lw * s * 0.9); doc.setLineDashPattern([], 0);
+      doc.circle(X(e.cx), Y(e.cy), e.r * s, st);
+    } else if (e.k === 't') {
+      doc.setTextColor(...col(e.c)); doc.setFont('helvetica', e.b ? 'bold' : 'normal');
+      doc.setFontSize(e.size * s * 72 / 25.4 * 0.95);
+      const opt = {}; if (e.a === 'middle') opt.align = 'center'; else if (e.a === 'end') opt.align = 'right'; if (e.rot) opt.angle = e.rot;
+      doc.text(ascii(e.s), X(e.x), Y(e.y), opt);
+    }
+  }
+  doc.setLineDashPattern([], 0);
+};
+function ascii(s) {
+  const m = { 'φ': 'phi', 'γ': 'g', 'δ': 'd', 'σ': 's', 'λ': 'lambda', '√': 'sqrt', '≥': '>=', '≤': '<=', '·': '*', '²': '^2', '³': '^3', '′': "'", '−': '-', '×': 'x', 'Δ': 'D', '°': ' deg', '—': '-', '–': '-', '∞': 'inf', '→': '->', '≈': '~', 'β': 'beta', 'π': 'pi', '∑': 'Sum', 'Σ': 'Sum', '∫': 'int', '₀': '0', '▽': 'v', '‘': "'", '’': "'", '“': '"', '”': '"', '…': '...', 'ᵢ': 'i', 'ₐ': 'a', 'ₚ': 'p', '½': '1/2', '∝': '~', '⁴': '^4', 'ζ': 'z', 'ρ': 'rho', 'μ': 'mu', 'θ': 'theta', '∂': 'd', '⌈': 'ceil(', '⌉': ')' };
+  return String(s).replace(/[^\x00-\xFF]/g, c => m[c] != null ? m[c] : '').replace(/[°²³·×½]/g, c => m[c]);
+}
+const f1 = (x, d = 1) => (x == null || !isFinite(x)) ? '—' : x.toFixed(d);
+const fk = (x, d = 2) => f1(x / 1000, d);
+function niceStep(range, n) { const r = range / n, p = Math.pow(10, Math.floor(Math.log10(r))), m = r / p; return (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p; }
+
+function sectionFig(res) {
+  const I = res.I, W = 1000, Hh = 670, F = new Fig(W, Hh);
+  const span = I.top - res.toe, zT = I.top + 0.09 * span, zB = res.toe - 0.03 * span;
+  const y0 = 40, yH = Hh - 122, sy = yH / (zT - zB), Y = z => y0 + (zT - z) * sy;
+  const P = { sec: [58, 330], pr: [360, 610], v: [640, 810], m: [835, 992] };
+  // elevation grid
+  const st = niceStep(zT - zB, 8);
+  for (let z = Math.ceil(zB / st) * st; z <= zT; z += st) {
+    F.line(P.sec[0] - 4, Y(z), P.m[1], Y(z), { c: 'grid', lw: 0.6, dash: [2, 4] });
+    F.text(P.sec[0] - 8, Y(z) + 4, f1(z, 0), { a: 'end', size: 10, c: 'muted' });
+  }
+  F.text(14, Y((zT + zB) / 2), 'Elevation (ft)', { rot: 90, a: 'middle', size: 11, c: 'muted' });
+  // ---- section panel
+  const sx = sy, xw = P.sec[0] + 0.45 * (P.sec[1] - P.sec[0]), tw = Math.max(6, I.dia / 12 * sx);
+  const xl = P.sec[0], xr = P.sec[1], wl = xw - tw / 2, wr = xw + tw / 2;
+  const L = res.coef.map(c => Object.assign({ name: c.l.name }, c)); const sTok = ['s0', 's1', 's2', 's3', 's4'];
+  L.forEach((l, i) => {
+    const zt = i === 0 ? 1e9 : l.top, zb = l.bot == null ? -1e9 : l.bot;
+    const rt = Math.min(zt, I.zr), rb = Math.max(zb, zB);
+    if (rt > rb) F.rect(wr, Y(rt), xr - wr, Y(rb) - Y(rt), { f: sTok[i % 5] });
+    const et = Math.min(zt, I.ze), eb = Math.max(zb, zB);
+    if (et > eb) F.rect(xl, Y(et), wl - xl, Y(eb) - Y(et), { f: sTok[i % 5] });
+    if (l.bot != null && l.bot > zB && l.bot < I.zr) {
+      F.line(wr, Y(l.bot), xr, Y(l.bot), { c: 'muted', lw: 0.7, dash: [5, 3] });
+      if (l.bot < I.ze) F.line(xl, Y(l.bot), wl, Y(l.bot), { c: 'muted', lw: 0.7, dash: [5, 3] });
+    }
+    const zm = (Math.min(zt, I.zr) + Math.max(zb, zB)) / 2;
+    if (Math.min(zt, I.zr) - Math.max(zb, zB) > 0.06 * span) F.text(xr - 4, Y(zm) + 4, l.name, { a: 'end', size: 10, c: 'ink' });
+  });
+  F.line(wr, Y(I.zr), xr, Y(I.zr), { c: 'ink', lw: 1.4 });
+  F.line(xl, Y(I.ze), wl, Y(I.ze), { c: 'ink', lw: 1.4 });
+  // water
+  const wt = (x1, x2, z, lab) => { F.line(x1, Y(z), x2, Y(z), { c: 'wat', lw: 1.2 }); const xm = (x1 + x2) / 2; F.poly([[xm - 5, Y(z) - 8], [xm + 5, Y(z) - 8], [xm, Y(z) - 1]], { c: 'wat', lw: 1.2 }); F.text(xm + 8, Y(z) - 3, lab, { size: 9.5, c: 'wat' }); };
+  if (I.wtr > res.toe) wt(wr + 6, xr - 6, I.wtr, 'EL ' + f1(I.wtr, 1));
+  if (I.wte > res.toe) wt(xl + 4, wl - 4, I.wte, 'EL ' + f1(I.wte, 1));
+  // slab
+  const ts = Math.max(I.slabT || 0, 0.5);
+  F.rect(xl, Y(I.zb + ts / 2), wl - xl, ts * sy, { f: 'concF', c: 'conc', lw: 1 });
+  F.text(xl + 4, Y(I.zb) + 4, 'Slab (brace)', { size: 9.5, c: 'ink' });
+  // wall
+  F.rect(wl, Y(I.top), tw, (I.top - res.toe) * sy, { f: 'wall', c: 'ink', lw: 1 });
+  F.poly([[wl - 7, Y(I.zb)], [wl, Y(I.zb) - 4], [wl, Y(I.zb) + 4]], { f: 'ink' });
+  // surcharge arrows
+  if (I.q > 0) {
+    const ya = Y(I.zr) - 26;
+    F.line(wr + 4, ya, xr - 4, ya, { c: 'act', lw: 1.2 });
+    for (let x = wr + 12; x < xr - 4; x += 22) { F.line(x, ya, x, Y(I.zr) - 3, { c: 'act', lw: 1 }); F.poly([[x - 3, Y(I.zr) - 8], [x + 3, Y(I.zr) - 8], [x, Y(I.zr) - 2]], { f: 'act' }); }
+    F.text((wr + xr) / 2, ya - 5, 'q = ' + f1(I.q, 0) + ' psf', { a: 'middle', size: 10, c: 'act', b: 1 });
+  }
+  // building footings (Boussinesq strip loads), drawn to scale on the retained side and clipped at the panel edge
+  (I.bldg || []).filter(b => b.q > 0 && b.B > 0).forEach((b, j) => {
+    const clip = wr + b.x * sx > xr - 34, xa = clip ? xr - 34 : wr + b.x * sx, xb = Math.min(wr + (b.x + b.B) * sx, xr - 2), yf = Y(b.zf), th = 7;
+    F.rect(xa, yf - th, xb - xa, th, { f: 'concF', c: 'ink', lw: 1, dash: clip ? [3, 2] : undefined });
+    for (let x = xa + 5; x < xb - 2; x += 12) { F.line(x, yf - th - 16, x, yf - th - 3, { c: 'act', lw: 1 }); F.poly([[x - 3, yf - th - 7], [x + 3, yf - th - 7], [x, yf - th - 1]], { f: 'act' }); }
+    const ty = yf - th - 31 - 22 * j;
+    F.text(xr - 2, ty, 'Bldg ' + (j + 1) + ': Q = ' + f1(b.q, 0) + ' psf', { a: 'end', size: 8.5, c: 'act', b: 1 });
+    F.text(xr - 2, ty + 10, 'x1 = ' + f1(b.x, 1) + ' ft, B = ' + f1(b.B, 1) + ' ft' + (clip ? ' (n.t.s.)' : ''), { a: 'end', size: 8.5, c: 'act' });
+  });
+  // dims
+  const dimV = (x, za, zb, lab) => { F.line(x, Y(za), x, Y(zb), { c: 'ink', lw: 0.8 }); F.line(x - 4, Y(za), x + 4, Y(za), { c: 'ink', lw: 0.8 }); F.line(x - 4, Y(zb), x + 4, Y(zb), { c: 'ink', lw: 0.8 }); F.text(x - 5, Y((za + zb) / 2), lab, { rot: 90, a: 'middle', size: 9.5, c: 'ink' }); };
+  dimV(xl + 12, I.zr, I.ze, 'H = ' + f1(I.zr - I.ze, 2) + ' ft');
+  dimV(wl - 10, I.ze, res.toe, 'D = ' + f1(res.Dd, 2) + ' ft');
+  F.text(wr + 4, Y(res.toe) + 13, 'Toe EL ' + f1(res.toe, 2), { size: 10, c: 'ink', b: 1 });
+  F.text(xl, 22, 'Section', { size: 13, b: 1 });
+  F.text(xl + 58, 22, 'excavation | retained', { size: 10, c: 'muted' });
+
+  // ---- pressure panel
+  const pr = res.prof;
+  let pPos = 1, pNeg = 1; pr.forEach(p => { for (const k of ['drive', 'bs', 'w', 'pAv', 'eAct', 'net', 'pMob']) { pPos = Math.max(pPos, p[k]); pNeg = Math.max(pNeg, -p[k]); } });
+  pPos = Math.max(pPos, 0.25 * pNeg); pNeg = Math.max(pNeg, 0.25 * pPos);
+  const pw = P.pr[1] - P.pr[0] - 12, sp = pw / (pPos + pNeg), xc = P.pr[0] + 6 + pNeg * sp, Xp = v => xc + v * sp, pm = 0;
+  const curve = (key, o) => F.poly(pr.map(p => [Xp(p[key]), Y(p.z)]), Object.assign({ open: true }, o));
+  F.poly([[xc, Y(pr[0].z)], ...pr.map(p => [Xp(p.net), Y(p.z)]), [xc, Y(pr[pr.length - 1].z)]], { f: 'netF' });
+  curve('pAv', { c: 'pas', lw: 1, dash: [4, 3] });
+  curve('pMob', { c: 'pas', lw: 1.6 });
+  if (res.mode === 'B') curve('eAct', { c: 'act', lw: 1, dash: [4, 3] });
+  curve('drive', { c: 'act', lw: 1.6 });
+  if (res.bld.length) curve('bs', { c: 'act', lw: 1.1, dash: [1.5, 2.5] });
+  curve('w', { c: 'wat', lw: 1.4 });
+  curve('net', { c: 'ink', lw: 1.2 });
+  F.line(xc, Y(zT) + 10, xc, Y(zB), { c: 'ink', lw: 0.8 });
+  F.line(xc - 4, Y(I.zb), xc + 4, Y(I.zb), { c: 'ink', lw: 2 });
+  F.text(P.pr[0], 22, 'Lateral pressure (psf)', { size: 13, b: 1 });
+  F.text(xc + 4, Y(zT) + 20, '+ toward excavation', { size: 9.5, c: 'muted' });
+  F.text(Xp(-pNeg), Y(zB) + 16, f1(-pNeg, 0), { a: 'start', size: 9.5, c: 'muted' });
+  F.text(Xp(pPos), Y(zB) + 16, f1(pPos, 0), { a: 'end', size: 9.5, c: 'muted' });
+  const lg = [['act', 'Retained earth + surcharges', null], ...(res.bld.length ? [['act', 'Building load (Boussinesq)', [1.5, 2.5]]] : []), ['wat', 'Net water', null], ['pas', 'Passive, mobilised', null], ['pas', 'Passive, available', [4, 3]], ['ink', 'Net (service)', null], ['act', 'Factored V, M', [5, 3]]];
+  if (res.mode === 'B') lg.splice(2, 0, ['act', 'Excavation-side active', [4, 3]]);
+  // legend row (below all panels)
+  let lx = P.sec[0], ly = Hh - 34;
+  lg.forEach(g => { const wdt = 30 + g[1].length * 5.3 + 14; if (lx + wdt > 995) { lx = P.sec[0]; ly += 16; } F.line(lx, ly, lx + 22, ly, { c: g[0], lw: 1.8, dash: g[2] || undefined }); F.text(lx + 27, ly + 4, g[1], { size: 10, c: 'ink' }); lx += wdt; });
+
+  // ---- shear and moment
+  const vm = res.S.pts, vmF = res.F.pts;
+  const panel = (rng, key, title, scale, unit) => {
+    let mx = 1e-9; vm.forEach(p => mx = Math.max(mx, Math.abs(p[key]))); vmF.forEach(p => mx = Math.max(mx, Math.abs(p[key])));
+    const xc2 = (rng[0] + rng[1]) / 2, hw2 = (rng[1] - rng[0]) / 2 - 6, s2 = hw2 / mx, Xv = v => xc2 + v * s2;
+    F.poly([[xc2, Y(vm[0].z)], ...vm.map(p => [Xv(p[key]), Y(p.z)]), [xc2, Y(vm[vm.length - 1].z)]], { f: 'netF', c: 'ink', lw: 1.3 });
+    F.poly(vmF.filter((p, i) => i % 3 === 0 || i === vmF.length - 1).map(p => [Xv(p[key]), Y(p.z)]), { c: 'act', lw: 1.1, dash: [5, 3], open: true });
+    F.line(xc2, Y(zT) + 10, xc2, Y(zB), { c: 'ink', lw: 0.8 });
+    F.text(rng[0], 22, title, { size: 13, b: 1 });
+    F.text(Xv(-mx), Y(zB) + 16, f1(-mx * scale, 1), { size: 9.5, c: 'muted' });
+    F.text(Xv(mx), Y(zB) + 16, f1(mx * scale, 1), { a: 'end', size: 9.5, c: 'muted' });
+    F.text(rng[1], Y(zB) + 30, unit, { a: 'end', size: 9.5, c: 'muted' });
+    return Xv;
+  };
+  const Xv = panel(P.v, 'V', 'Shear', 1 / 1000, 'kip/ft'); const S = res.S;
+  F.text(Xv(S.Vmax) + (S.Vmax > 0 ? 4 : -4), Y(S.zV) + 12, f1(Math.abs(S.Vmax) / 1000, 2), { a: S.Vmax > 0 ? 'start' : 'end', size: 10, b: 1 });
+  const Xm = panel(P.m, 'M', 'Moment', 1 / 1000, 'kip-ft/ft');
+  if (S.Mpos > 1) F.text(Xm(S.Mpos) + 4, Y(S.zMp) + 4, f1(S.Mpos / 1000, 1), { size: 10, b: 1 });
+  if (S.Mneg < -1) F.text(Xm(S.Mneg) - 4, Y(S.zMn) + 4, f1(-S.Mneg / 1000, 1), { a: 'end', size: 10, b: 1 });
+  return F;
+}
+
+function planFig(res) {
+  const I = res.I, W = 1000, H = 220, F = new Fig(W, H);
+  const n = 7, s = Math.min(120, 880 / (n - 1 + I.dia / I.sp)), r = s * (I.dia / I.sp) / 2, x0 = W / 2 - (n - 1) * s / 2, yc = 100;
+  for (let i = 0; i < n; i++) { if (i % 2 === 0) F.circ(x0 + i * s, yc, r, { f: 'concF', c: 'conc', lw: 1 }); }
+  for (let i = 0; i < n; i++) { if (i % 2 === 1) { F.circ(x0 + i * s, yc, r, { f: 'sec', c: 'ink', lw: 1.2 }); F.circ(x0 + i * s, yc, r * 0.72, { c: 'ink', lw: 1, }); } }
+  if (I.pat === 'all') for (let i = 0; i < n; i += 2) F.circ(x0 + i * s, yc, r * 0.72, { c: 'ink', lw: 1 });
+  const d = (xa, xb, y, lab) => { F.line(xa, y, xb, y, { c: 'ink', lw: 0.8 }); F.line(xa, y - 4, xa, y + 4, { c: 'ink', lw: 0.8 }); F.line(xb, y - 4, xb, y + 4, { c: 'ink', lw: 0.8 }); F.text((xa + xb) / 2, y - 5, lab, { a: 'middle', size: 11 }); };
+  d(x0 + 2 * s, x0 + 3 * s, yc - r - 18, 's = ' + f1(I.sp, 1) + ' in');
+  d(x0 + 4 * s - r, x0 + 4 * s + r, yc + r + 26, 'd = ' + f1(I.dia, 1) + ' in');
+  F.text(x0 + 5.5 * s, yc - r - 14, 'overlap = ' + f1(res.geom.ov, 1) + ' in', { a: 'middle', size: 11 });
+  F.text(x0 + 0.5 * s, yc + r + 26, 't at interlock = ' + f1(res.geom.t_in, 1) + ' in', { a: 'middle', size: 11 });
+  F.text(20, 22, 'Plan — secant pile layout', { size: 13, b: 1 });
+  F.text(W - 20, 22, I.pat === 'alt' ? 'Shaded: reinforced secondary piles; light: unreinforced primary' : 'All piles reinforced', { a: 'end', size: 10.5, c: 'muted' });
+  F.text(W - 20, H - 12, 'Retained side', { a: 'end', size: 10.5, c: 'muted' });
+  F.text(20, H - 12, 'Excavation side (below)', { size: 10.5, c: 'muted' });
+  return F;
+}
+
+
+;
+/* ==== LaTeX in the PDF: MathJax SVG (fontCache:none) → vector glyph paths → jsPDF ==== */
+function mulT(a, b) { return [a[0] * b[0] + a[2] * b[1], a[1] * b[0] + a[3] * b[1], a[0] * b[2] + a[2] * b[3], a[1] * b[2] + a[3] * b[3], a[0] * b[4] + a[2] * b[5] + a[4], a[1] * b[4] + a[3] * b[5] + a[5]]; }
+function parseTransform(s) {
+  let T = [1, 0, 0, 1, 0, 0]; if (!s) return T;
+  const re = /(translate|scale|matrix|rotate)\s*\(([^)]*)\)/g; let m;
+  while ((m = re.exec(s))) {
+    const v = m[2].split(/[\s,]+/).filter(Boolean).map(Number); let t;
+    if (m[1] === 'translate') t = [1, 0, 0, 1, v[0] || 0, v[1] || 0];
+    else if (m[1] === 'scale') t = [v[0], 0, 0, v.length > 1 ? v[1] : v[0], 0, 0];
+    else if (m[1] === 'matrix') t = v;
+    else { const a = (v[0] || 0) * Math.PI / 180; t = [Math.cos(a), Math.sin(a), -Math.sin(a), Math.cos(a), 0, 0]; }
+    T = mulT(T, t);
+  }
+  return T;
+}
+const apT = (T, x, y) => [T[0] * x + T[2] * y + T[4], T[1] * x + T[3] * y + T[5]];
+function attrs(s) { const o = {}; const re = /([\w:-]+)\s*=\s*"([^"]*)"/g; let m; while ((m = re.exec(s))) o[m[1]] = m[2]; return o; }
+function pathOps(d, T) {
+  const tok = d.match(/[A-Za-z]|-?\d*\.?\d+(?:e[-+]?\d+)?/g) || [];
+  const out = []; let i = 0, cmd = '', x = 0, y = 0, sx = 0, sy = 0, qx = null, qy = null, cx2 = null, cy2 = null;
+  const n = () => parseFloat(tok[i++]);
+  const P = (px, py) => apT(T, px, py);
+  while (i < tok.length) {
+    if (/[A-Za-z]/.test(tok[i])) cmd = tok[i++];
+    const rel = cmd === cmd.toLowerCase(), C = cmd.toUpperCase();
+    const ox = rel ? x : 0, oy = rel ? y : 0;
+    if (C === 'Z') { out.push(['Z']); x = sx; y = sy; qx = cx2 = null; continue; }
+    if (C === 'M') { x = ox + n(); y = oy + n(); sx = x; sy = y; out.push(['M', ...P(x, y)]); cmd = rel ? 'l' : 'L'; qx = cx2 = null; continue; }
+    if (C === 'L') { x = ox + n(); y = oy + n(); out.push(['L', ...P(x, y)]); qx = cx2 = null; continue; }
+    if (C === 'H') { x = ox + n(); out.push(['L', ...P(x, y)]); qx = cx2 = null; continue; }
+    if (C === 'V') { y = oy + n(); out.push(['L', ...P(x, y)]); qx = cx2 = null; continue; }
+    if (C === 'Q' || C === 'T') {
+      let x1, y1;
+      if (C === 'Q') { x1 = ox + n(); y1 = oy + n(); } else { x1 = qx == null ? x : 2 * x - qx; y1 = qy == null ? y : 2 * y - qy; }
+      const x2 = ox + n(), y2 = oy + n();
+      const c1 = [x + 2 / 3 * (x1 - x), y + 2 / 3 * (y1 - y)], c2 = [x2 + 2 / 3 * (x1 - x2), y2 + 2 / 3 * (y1 - y2)];
+      out.push(['C', ...P(...c1), ...P(...c2), ...P(x2, y2)]); qx = x1; qy = y1; cx2 = null; x = x2; y = y2; continue;
+    }
+    if (C === 'C' || C === 'S') {
+      let x1, y1;
+      if (C === 'C') { x1 = ox + n(); y1 = oy + n(); } else { x1 = cx2 == null ? x : 2 * x - cx2; y1 = cy2 == null ? y : 2 * y - cy2; }
+      const xb = ox + n(), yb = oy + n(), x2 = ox + n(), y2 = oy + n();
+      out.push(['C', ...P(x1, y1), ...P(xb, yb), ...P(x2, y2)]); cx2 = xb; cy2 = yb; qx = null; x = x2; y = y2; continue;
+    }
+    i++; // unsupported command: skip a token
+  }
+  return out;
+}
+/* parse a MathJax SVG string → {w, asc, desc, shapes:[ops]} in em/1000 units, y down, baseline y = 0 */
+function mjParse(svg) {
+  const top = svg.match(/<svg\b([^>]*)>/); if (!top) return null;
+  const A = attrs(top[1]); const vb = (A.viewBox || '0 0 0 0').split(/[\s,]+/).map(Number);
+  const shapes = []; const stack = [[1, 0, 0, 1, 0, 0]];
+  const re = /<(\/?)(g|path|rect|svg|line)\b([^>]*?)(\/?)>/g; let m, first = true;
+  while ((m = re.exec(svg))) {
+    const close = m[1] === '/', tag = m[2], at = attrs(m[3]), selfc = m[4] === '/';
+    if (tag === 'svg') { if (first) { first = false; continue; } if (close) { stack.pop(); continue; } // nested svg (rare)
+      const T = mulT(stack[stack.length - 1], [1, 0, 0, 1, +at.x || 0, +at.y || 0]); stack.push(T); continue; }
+    if (close) { if (tag === 'g') stack.pop(); continue; }
+    const T = mulT(stack[stack.length - 1], parseTransform(at.transform));
+    if (tag === 'g') { if (!selfc) stack.push(T); continue; }
+    if (tag === 'path' && at.d) shapes.push(pathOps(at.d, T));
+    if (tag === 'rect') { const x = +at.x || 0, y = +at.y || 0, w = +at.width || 0, h = +at.height || 0; shapes.push([['M', ...apT(T, x, y)], ['L', ...apT(T, x + w, y)], ['L', ...apT(T, x + w, y + h)], ['L', ...apT(T, x, y + h)], ['Z']]); }
+  }
+  return { w: vb[2], asc: -vb[1], desc: vb[3] + vb[1], shapes };
+}
+/* draw at (x, yBaseline) mm, size = font size in pt (1 em) */
+function mjDraw(doc, g, x, yb, size, rgb) {
+  const s = size * 25.4 / 72 / 1000;
+  doc.setFillColor(...(rgb || [28, 34, 38]));
+  for (const ops of g.shapes) {
+    let open = false;
+    for (const o of ops) {
+      if (o[0] === 'M') { doc.moveTo(x + o[1] * s, yb + o[2] * s); open = true; }
+      else if (o[0] === 'L') doc.lineTo(x + o[1] * s, yb + o[2] * s);
+      else if (o[0] === 'C') doc.curveTo(x + o[1] * s, yb + o[2] * s, x + o[3] * s, yb + o[4] * s, x + o[5] * s, yb + o[6] * s);
+      else if (o[0] === 'Z') doc.close();
+    }
+    if (open) doc.fill();
+  }
+}
+/* readable fallback when MathJax is unavailable */
+function texPlain(t) {
+  let s = t;
+  const G = { alpha: 'α', beta: 'β', gamma: 'γ', delta: 'δ', lambda: 'λ', sigma: 'σ', phi: 'φ', varphi: 'φ', rho: 'ρ', theta: 'θ', Delta: 'Δ', Sigma: 'Σ', pi: 'π', mu: 'μ', tau: 'τ' };
+  for (let k = 0; k < 4; k++) s = s.replace(/\\(?:d|t)?frac\{([^{}]*)\}\{([^{}]*)\}/g, '($1)/($2)');
+  s = s.replace(/\\sqrt\{([^{}]*)\}/g, '√($1)').replace(/\\(?:text|mathrm|operatorname|mathbf|boldsymbol)\{([^{}]*)\}/g, '$1');
+  s = s.replace(/\\(alpha|beta|gamma|delta|lambda|sigma|varphi|phi|rho|theta|Delta|Sigma|pi|mu|tau)\b/g, (m, g) => G[g]);
+  s = s.replace(/\\(le|leq)\b/g, '≤').replace(/\\(ge|geq)\b/g, '≥').replace(/\\cdot/g, '·').replace(/\\times/g, '×').replace(/\\int/g, '∫').replace(/\\sum/g, 'Σ').replace(/\\approx/g, '≈').replace(/\\to/g, '→').replace(/\\infty/g, '∞').replace(/\\circ/g, '°').replace(/\\max/g, 'max').replace(/\\min/g, 'min').replace(/\\tan/g, 'tan').replace(/\\sin/g, 'sin').replace(/\\cos/g, 'cos').replace(/\\ln/g, 'ln').replace(/\\exp/g, 'exp').replace(/\\partial/g, '∂');
+  s = s.replace(/\\(left|right|big|Big|bigl|bigr|,|;|!|quad|qquad|displaystyle|,)/g, ' ').replace(/\\\\/g, ' ; ').replace(/&/g, '').replace(/\\begin\{[^}]*\}|\\end\{[^}]*\}/g, '');
+  s = s.replace(/[{}]/g, '').replace(/\\/g, '').replace(/\s+/g, ' ').trim();
+  return s;
+}
+
+;
+/* ==== Shared content: option guide, references, derivation (TeX) ==== */
+const REFS = [
+  'FHWA (2007). Earth Retaining Structures, Reference Manual, FHWA-NHI-07-071. Tanyu, Sabatini & Berg. Ch. 3 (lateral earth and water pressures), Ch. 4 (LRFD), Ch. 8 (non-gravity cantilevered and anchored walls).',
+  'AASHTO (2007 and later). LRFD Bridge Design Specifications. Tables 3.4.1-1, 3.4.1-2 (load factors); §3.11.5–3.11.6 (earth pressure, surcharge); Table 11.5.6-1 (resistance factors).',
+  'NAVFAC (1986). Design Manual 7.02 — Foundations and Earth Structures. Coulomb and log-spiral (Caquot–Kerisel) coefficient charts.',
+  'Caquot, A. and Kerisel, J. (1948). Tables for the Calculation of Passive Pressure, Active Pressure and Bearing Capacity of Foundations. Gauthier-Villars, Paris.',
+  'Padfield, C.J. and Mair, R.J. (1984). Design of Retaining Walls Embedded in Stiff Clay. CIRIA Report 104. Gross-pressure (Fp) and strength-factor (Fs) methods; seepage pressures.',
+  'Teng, W.C. (1962). Foundation Design. Prentice-Hall; and United States Steel (1975). Steel Sheet Piling Design Manual. Free-earth support method (FHWA Fig. 8-59).',
+  'Rowe, P.W. (1952). Anchored sheet-pile walls. Proc. ICE, 1(1), 27–70. Moment reduction and flexibility number (FHWA Fig. 8-60).',
+  'Jaky, J. (1944). The coefficient of earth pressure at rest. J. Soc. Hungarian Architects and Engineers; Mayne, P.W. and Kulhawy, F.H. (1982). K0–OCR relationships in soil. J. Geotech. Eng. Div. ASCE, 108(GT6).',
+  'Rankine, W.J.M. (1857). On the stability of loose earth. Phil. Trans. R. Soc. London, 147; Coulomb, C.A. (1776). Essai sur une application des règles de maximis et minimis… Mém. Acad. Roy. Sci., 7.',
+  'Terzaghi, K., Peck, R.B. and Mesri, G. (1996). Soil Mechanics in Engineering Practice, 3rd Ed. Wiley. Basal heave (FHWA Fig. 8-75); Skempton, A.W. (1951). The bearing capacity of clays. Building Research Congress, London (Nc).',
+  'ACI 318-19, Building Code Requirements for Structural Concrete, Table 5.3.1; ASCE/SEI 7-22, §2.3 (lateral earth pressure H, load factor 1.6).'
+];
+const OPTS = [
+  ['Active theory', 'Rankine', 'Smooth wall (δa = 0), level ground. Ka = tan²(45° − φ′/2).', 'Default. Layered or uncertain interfaces; walls near vibration or in soft soils where FHWA sets δ = 0. Slightly conservative.', '[1] §3.2.3, §3.6.1.2'],
+  ['Active theory', 'Coulomb', 'Planar wedge with wall friction δa ≤ 2/3 φ′; horizontal component used.', 'Rough cast-in-place concrete against granular soil with no tendency for the wall to move down. Within ~10% of log-spiral for active.', '[1] §3.2.4, §3.6.2.2'],
+  ['Passive theory', 'Rankine', 'Smooth wall (δp = 0). Kp = tan²(45° + φ′/2).', 'Conservative lower value; use when wall–soil friction cannot be relied on, or for clays.', '[1] §3.2.3'],
+  ['Passive theory', 'Coulomb', 'Planar wedge with δp ≤ φ′/3.', 'Only with small wall friction; planar wedges overestimate Kp as δp grows (unsafe above φ′/3).', '[1] §3.2.5'],
+  ['Passive theory', 'Log-spiral (Caquot–Kerisel)', 'Curved failure surface; Kp = Kp,R · R(φ′, δp/φ′)/R(φ′, 0), δp ≤ φ′/2, horizontal component Kp cos δp.', 'FHWA-recommended for passive resistance of cut walls with wall friction (secant piles in sand/gravel/till).', '[1] §3.6.2.2, Fig. 3-12; [3]; [4]'],
+  ['Driving state', 'Active, Ka', 'Limiting minimum pressure; needs outward movement of order 0.1–0.4% of height.', 'Temporary or flexible walls that are allowed to deflect; no sensitive structures behind. EH load factor 1.50.', '[1] §3.2.1, §3.5'],
+  ['Driving state', 'At rest, K0', 'No lateral strain; K0 = (1 − sin φ′)·OCR^sin φ′.', 'Stiff, stiffly braced permanent walls (slab-braced secant walls installed before excavation), movement-sensitive neighbours, overconsolidated ground. EH 1.35.', '[1] §3.2.2, Eqs. 3-6, 3-7'],
+  ['Driving state', 'Average of Ka and K0', 'Mid-way between active and at-rest.', 'Stiff walls with limited but non-zero movement (e.g. a well-propped secant wall at an intermediate stage). EH 1.50 used (conservative).', '[1] §3.5'],
+  ['Driving state', 'Apparent pressure — sand', 'Trapezoid: total 0.65 Ka γ′ H² (Rankine Ka, effective γ), ramps 2/3 H1 and 2/3 (H − H1). Surcharge and water added. Active below the excavation.', 'Flexible single-support walls at final excavation in sands, or stiff clays long-term with drained φ′. Gives larger support loads and smaller spans than a triangle. EH 1.35.', '[1] §3.6.4, §8.11.2.1, Fig. 8-67'],
+  ['Driving state', 'Apparent pressure — stiff clay', 'Same trapezoid with p = C γ H, C = 0.2–0.4 (0.3 for lock-off ≤ 75%, 0.4 at 100%).', 'Temporary excavations in stiff to hard clay with no free water only. EH 1.35.', '[1] §8.11.2.2, Fig. 8-68'],
+  ['Pore pressure', 'Hydrostatic', 'u = γw (zw − z) on each side.', 'Wall toe in a low-permeability layer (cut-off), or when the greatest unbalanced head must be assumed. Conservative for net water.', '[1] §3.6.5, Fig. 3-20'],
+  ['Pore pressure', 'Linear seepage', 'Head difference lost uniformly down the back and up the front of the wall.', 'Pervious ground with dewatering inside the excavation and no cut-off; reduces net water pressure.', '[1] Eqs. 3-33, 3-34, Fig. 3-22; [5]'],
+  ['Soil layer', 'Drained (D)', 'Effective stress: φ′, c′, water added separately.', 'Sands, gravels, tills; clays long-term.', '[1] §3.6.2.2'],
+  ['Soil layer', 'Undrained (U)', 'Total stress: φ = 0, su; pa = σv − 2su, pp = σv + 2su, water included.', 'Short-term (end of construction) in normally to lightly overconsolidated clays. Check long-term drained case separately.', '[1] §3.2.3, §3.6.2.1'],
+  ['Building surcharge', 'Boussinesq strip load', 'Δph = (2Q/π)[β − sin β cos(β + 2θ1)] for a footing of width B at clear offset x1 and base EL zf; elastic solution doubled for a non-yielding wall.', 'Adjacent building footings or mats (ES). Treat each footing as a strip parallel to the wall; conservative for finite lengths.', 'AASHTO Eq. 3.11.6.2-1; [1] §3.7'],
+  ['Minimum pressure', '30 pcf (MEFP)', 'Total active pressure ≥ 30 z psf.', 'Clays or c′ > 0 where theory gives near-zero or negative pressure; allows for softening and water in tension cracks.', '[1] §3.6.2'],
+  ['Embedment method', 'Fp (ASD)', 'Passive moment about the brace ≥ Fp × driving moment. Fp ≥ 1.5 (FHWA minimum), 1.5–2.0 typical.', 'General ASD design; directly comparable with FHWA Fig. 8-59 (divide Pp by 1.5–2.0).', '[1] §8.9.2.4, Fig. 8-59; [6]'],
+  ['Embedment method', 'Fs (strength)', 'tan φ′d = tan φ′/Fs, c′d = c′/Fs, su,d = su/Fs on both sides; moment balance. Fs 1.2–1.5.', 'Stiff-clay walls and when Rowe moment reduction is to be used (FHWA requires Fs-based penetration for the reduction).', '[1] §8.10.2; [5]'],
+  ['Embedment method', 'LRFD', 'φp Mpassive ≥ Σ γi Mi, φp = 0.75, load factors per AASHTO Strength I.', 'AASHTO-based projects. Roughly equivalent to Fp ≈ 2.0 for active soil loads (1.5/0.75).', '[1] §8.9.2.4, Tables 4-1, 4-2; [2]'],
+  ['Load factors', 'AASHTO Strength I', 'EH 1.50 active / 1.35 at-rest and AEP; ES 1.50 or LS 1.75; WA 1.00.', 'Transportation structures and FHWA/AASHTO-governed work.', '[1] Tables 4-1, 4-2; [2]'],
+  ['Load factors', 'ACI 318 / ASCE 7', '1.6 applied to soil, water and surcharge (H).', 'Building-code structures (e.g. transit stations designed to ACI 318).', '[11]']
+];
+
+const n_ = (x, d = 2) => (x == null || !isFinite(x)) ? '\\infty' : (Math.abs(x) < 1e-12 ? 0 : x).toFixed(d);
+const okT = b => "\\ \\Rightarrow\\ \\text{" + (b ? 'OK' : 'NG') + "}";
+/* Governing equations followed immediately by the numbers at the design embedment (screen tab and PDF §3.4) */
+function calcBlocks(res) {
+  const I = res.I, B = [], H = t => B.push({ k: 'h', t }), P = t => B.push({ k: 'p', t }), E = (tex, ref) => B.push({ k: 'eq', tex, ref: ref || '' });
+  const Rs = res.Rs, f = res.LF, ot = res.ot, K = x => n_(x / 1000, 2);
+
+  H('A. Vertical stress and pore pressure');
+  E("\\sigma_v(z)=q+\\int_{z}^{z_g}\\gamma\\,d\\zeta\\ \\ (\\gamma_m\\text{ above, }\\gamma_{sat}\\text{ below water}),\\qquad \\sigma'_v=\\sigma_v-u", 'FHWA Eq. 3-8');
+  if (I.water === 'seep') E("i=\\frac{z_{wr}-z_{we}}{(z_{wr}-z_t)+(z_x-z_t)},\\quad u_r=\\gamma_w(z_{wr}-z)(1-i),\\quad u_e=\\gamma_w\\big[z_{wr}-i(z_{wr}-2z_t+z)-z\\big]", 'FHWA Eq. 3-33, Fig. 3-22');
+  else E("u_r=\\gamma_w\\langle z_{wr}-z\\rangle,\\qquad u_e=\\gamma_w\\langle z_{we}-z\\rangle", 'FHWA §3.6.5, Fig. 3-20');
+  P('In front of the wall z_g becomes the excavation grade z_e and q becomes any standing water. Elevations z in ft, positive up; pressures in psf per ft of wall.');
+
+  H('B. Earth-pressure coefficients and driving pressure');
+  E("\\sigma'_a=K_a\\sigma'_v-2c'\\sqrt{K_a}\\ge0,\\quad \\sigma'_p=K_p\\sigma'_v+2c'\\sqrt{K_p},\\quad K_a=\\tan^2\\!\\big(45^\\circ-\\tfrac{\\phi'}{2}\\big),\\ K_0=(1-\\sin\\phi')\\,\\mathrm{OCR}^{\\sin\\phi'}", 'FHWA Eqs. 3-2 to 3-7, 3-11');
+  if (I.thA === 'coulomb') E("K_{a,h}=\\frac{\\cos^2\\phi'}{\\big[1+\\sqrt{\\sin(\\phi'+\\delta_a)\\sin\\phi'/\\cos\\delta_a}\\big]^2},\\quad \\delta_a=" + n_(I.dA, 2) + "\\phi'", 'FHWA Fig. 3-5');
+  if (I.thP === 'coulomb') E("K_{p,h}=\\frac{\\cos^2\\phi'}{\\big[1-\\sqrt{\\sin(\\phi'+\\delta_p)\\sin\\phi'/\\cos\\delta_p}\\big]^2},\\quad \\delta_p=" + n_(I.dP, 2) + "\\phi'", 'FHWA Fig. 3-5, §3.2.5');
+  if (I.thP === 'logspiral') E("K_{p,h}=\\tan^2\\!\\big(45^\\circ+\\tfrac{\\phi'}{2}\\big)\\,\\frac{R(\\phi',\\delta_p/\\phi')}{R(\\phi',0)}\\cos\\delta_p,\\quad \\delta_p=" + n_(I.dP, 2) + "\\phi'", 'FHWA Fig. 3-12');
+  if (I.layers.some(l => l.type === 'U')) E("\\text{Undrained }(\\phi=0):\\ p_a=\\sigma_v-2s_u,\\quad p_p=\\sigma_v+2s_u\\ \\ (\\text{total stress})", 'FHWA Eqs. 3-15, 3-17');
+  const st = { active: "p_d=\\sigma'_a", atrest: "p_d=K_0\\,\\sigma'_v", avg: "p_d=\\tfrac12\\big(\\sigma'_a+K_0\\sigma'_v\\big)", aepSand: "p_d=p_{AEP}(z)+K_a q\\ (z\\ge z_e),\\ \\ p_d=\\sigma'_a\\ (z<z_e)", aepClay: "p_d=p_{AEP}(z)+K_a q\\ (z\\ge z_e),\\ \\ p_d=\\sigma'_a\\ (z<z_e)" }[I.cond];
+  E("\\text{Driving earth pressure: }" + st + (I.mefp ? ",\\qquad p_d+u_r\\ge 30\\,(z_g-z)\\ \\text{psf}" : ""), I.mefp ? 'FHWA §3.6.2' : '');
+  if (I.cond === 'aepSand') E("p=\\frac{1.3\\int_{z_e}^{z_g}K_a\\sigma'_v\\,dz}{\\tfrac23H}=" + n_(res.aep.p, 0) + "\\ \\text{psf}\\ (=0.65K_a\\gamma'H^2/\\tfrac23H\\text{ in uniform soil})", 'FHWA Fig. 8-67');
+  if (I.cond === 'aepClay') E("p=C\\,\\bar\\gamma H=" + n_(I.aepC, 2) + "\\,\\bar\\gamma H=" + n_(res.aep.p, 0) + "\\ \\text{psf}", 'FHWA Fig. 8-68');
+
+  H('C. Surcharge pressures');
+  if (I.q > 0) E("\\Delta p_q=K\\,q=K\\times" + n_(I.q, 0) + "\\ \\text{psf}\\quad(\\text{uniform, full area; }K=K_a,\\ K_0\\text{ or average per driving state})", 'FHWA Eq. 3-36');
+  if (res.bld.length) {
+    E("\\Delta p_h(z)=\\frac{2Q}{\\pi}\\big[\\beta-\\sin\\beta\\cos(\\beta+2\\theta_1)\\big],\\quad \\theta_1=\\tan^{-1}\\frac{x_1}{d},\\ \\theta_2=\\tan^{-1}\\frac{x_1+B}{d},\\ \\beta=\\theta_2-\\theta_1,\\ d=z_f-z", 'AASHTO Eq. 3.11.6.2-1; FHWA §3.7');
+    P('Building footings are Boussinesq strip loads parallel to the wall: Q = bearing pressure (psf), x1 = clear distance from the back of wall to the near edge (ft), B = footing width (ft), z_f = footing base (EL ft). The factor 2 doubles the elastic half-space solution for a non-yielding wall. Pressures act from z_f to the toe.');
+    res.bld.forEach((r, j) => E("\\text{Bldg " + (j + 1) + ":}\\ Q=" + n_(r.b.q, 0) + "\\,\\text{psf},\\ x_1=" + n_(r.b.x, 1) + "\\,\\text{ft},\\ B=" + n_(r.b.B, 1) + "\\,\\text{ft},\\ z_f=\\text{EL }" + n_(r.b.zf, 2) + "\\ \\Rightarrow\\ P_h=\\int\\Delta p_h\\,dz=" + n_(r.P / 1000, 2) + "\\ \\text{kip/ft at EL }" + n_(r.zc, 2) + ",\\ \\Delta p_{h,max}=" + n_(r.pmax, 0) + "\\ \\text{psf at EL }" + n_(r.zmax, 2)));
+  }
+  if (!(I.q > 0) && !res.bld.length) P('No surcharge.');
+
+  H('D. Overturning about the slab (free-earth support, mode ' + res.mode + ')');
+  P('The wall is rigid and pinned at the slab (FHWA §8.10.2). Moments about the slab remove the slab force. Mode A: toe moves toward the excavation (passive in front). Mode B: toe moves into the retained soil (passive behind, below the slab). The weaker mode governs.');
+  E("M_O=\\int_{z_t}^{z_{top}}p_n(z)\\,(z_b-z)\\,dz,\\quad M_R=\\int p_p(z)\\,(z_b-z)\\,dz,\\quad p_n=p_d+\\Delta p_q+\\Delta p_h+(u_r-u_e)", 'FHWA Fig. 8-59');
+  const sgn = (v, i) => (v < 0 ? "-" : i ? "+" : "") + K(Math.abs(v));
+  E("M_O=" + [[ot.c.eh, 'EH'], [ot.c.es, 'ES'], [ot.c.bs, 'BLDG'], [ot.c.wa, 'WA']].map((t, i) => sgn(t[0], i) + "_{" + t[1] + "}").join('') + "=" + K(ot.MO) + "\\ \\text{kip-ft/ft},\\qquad M_R=" + K(ot.MR) + "\\ \\text{kip-ft/ft}");
+  if (I.meth === 'Fp') E("FS_{OT}=\\frac{M_R}{M_O}=\\frac{" + K(ot.MR) + "}{" + K(ot.MO) + "}=" + n_(res.prov, 2) + "\\ \\ge\\ F_p=" + n_(I.FSp, 2) + okT(res.prov >= I.FSp - 1e-9), 'FHWA §8.9.2.4');
+  if (I.meth === 'Fs') E("\\tan\\phi'_d=\\frac{\\tan\\phi'}{F_s},\\ c'_d=\\frac{c'}{F_s}:\\ \\ F_s\\text{ at }M_R=M_O\\ =" + n_(res.prov, 2) + "\\ \\ge\\ " + n_(I.FSs, 2) + okT(res.prov >= I.FSs - 1e-9), 'FHWA §8.10.2; CIRIA 104');
+  if (I.meth === 'LRFD') E("\\frac{\\varphi_pM_R}{\\sum\\gamma_iM_i}=\\frac{" + n_(I.phiP, 2) + "\\times" + K(ot.MR) + "}{" + [[f.EH, ot.c.eh], [f.ES, ot.c.es], [f.EB, ot.c.bs], [f.WA, ot.c.wa]].map((t, i) => (i ? "+" : "") + n_(t[0], 2) + "(" + K(t[1]) + ")").join('') + "}=" + n_(res.prov, 2) + "\\ \\ge 1" + okT(res.prov >= 1 - 1e-9), 'AASHTO Tab. 11.5.6-1');
+  E("D=\\max\\big(\\lceil\\max(D_{OT},D_{SL})(1+\\alpha)\\rceil_{\\Delta},\\,D_{min}\\big)=\\max\\big(\\lceil\\max(" + n_(res.Dot, 2) + "," + n_(res.Dsl, 2) + ")\\times" + n_(1 + I.inc / 100, 2) + "\\rceil_{" + n_(I.round, 2) + "},\\," + n_(I.Dmin, 2) + "\\big)=" + n_(res.Dd, 2) + "\\ \\text{ft},\\quad z_t=" + n_(res.toe, 2));
+
+  H('E. Sliding (horizontal equilibrium, whole wall toward the excavation)');
+  const sb = res.slab;
+  E("N=\\big(\\gamma_c\\,t_s-\\gamma_w h_w\\big)B_s=\\big(" + n_(I.gc, 0) + "\\times" + n_(sb.t, 2) + "-" + n_(GW, 1) + "\\times" + n_(sb.U / GW / sb.Bs, 2) + "\\big)\\times" + n_(sb.Bs, 1) + "=" + K(sb.N) + "\\ \\text{kip/ft}", 'Slab self-weight less uplift');
+  if (sb.U_) E("R_{slab}=\\min\\big(s_uB_s,\\ \\tfrac12N\\big)=\\min\\big(" + n_(sb.su, 0) + "\\times" + n_(sb.Bs, 1) + "/1000,\\ " + K(sb.N) + "/2\\big)=" + K(sb.R) + "\\ \\text{kip/ft}", 'AASHTO 10.6.3.4');
+  else E("R_{slab}=N\\tan\\delta=N\\,f\\tan\\phi'=" + K(sb.N) + "\\times" + n_(I.muF, 2) + "\\tan" + n_(sb.phi, 1) + "^\\circ=" + K(sb.N) + "\\times" + n_(sb.mu, 3) + "=" + K(sb.R) + "\\ \\text{kip/ft}", 'AASHTO 10.6.3.4');
+  E("F_{SL}=\\int p_n\\,dz,\\qquad R_{SL}=P_p+R_{slab},\\qquad FS_{SL}=\\frac{R_{SL}}{F_{SL}}", 'Horizontal equilibrium');
+  E("FS_{SL}=\\frac{" + K(res.sl.Pp) + "+" + K(sb.R) + "}{" + K(res.sl.Fd) + "}=\\frac{" + K(res.sl.Pp + sb.R) + "}{" + K(res.sl.Fd) + "}=" + n_(res.FSsl, 2) + "\\ \\ge\\ " + n_(I.FSsl, 2) + okT(res.FSsl >= I.FSsl - 1e-9));
+  P('F_SL = unfactored driving force (earth, surcharges and net water), kip/ft; P_p = full available passive in front of the wall, kip/ft; R_slab = friction of the slab bearing on "' + sb.layer + '" (slab base EL ' + f1(sb.zBase, 2) + ' ft, width B_s = ' + f1(sb.Bs, 1) + ' ft, h_w = water head above the slab base, ft), kip/ft.');
+
+  H('F. Slab reaction, shear and moment');
+  E("\\lambda=\\frac{M_O}{M_R}=\\frac{" + K(ot.MO) + "}{" + K(ot.MR) + "}=" + n_(res.svc.lam, 4) + ",\\qquad R=\\int p_n\\,dz-\\lambda\\int p_p\\,dz=" + n_((Rs.eh[0] + Rs.es[0] + Rs.bs[0] + Rs.wa[0]) / 1000, 2) + (Rs.pp[0] < 0 ? "-" : "+") + n_(res.svc.lam, 4) + "\\times" + n_(Math.abs(Rs.pp[0]) / 1000, 2) + "=" + n_(res.svc.R / 1000, 2) + "\\ \\text{kip/ft}", 'FHWA Fig. 8-59 step 6');
+  E("V(z)=\\int_{z}^{z_{top}}\\big(p_n-\\lambda p_p\\big)d\\zeta-R\\,\\mathbf 1[z<z_b],\\qquad M(z)=\\int_{z}^{z_{top}}V\\,d\\zeta");
+  E("M_{max}=" + K(res.S.Mmax) + "\\ \\text{kip-ft/ft},\\ V_{max}=" + K(Math.abs(res.S.Vmax)) + "\\ \\text{kip/ft (service)};\\quad p_{n,u}=\\gamma_{EH}p_{EH}+\\gamma_{ES}\\Delta p_q+\\gamma_{EB}\\Delta p_h+\\gamma_{WA}p_{WA}", 'FHWA §8.12.4.2');
+  E("M_u=" + K(res.F.Mmax) + "\\times" + n_(res.geom.b_ft, 2) + "=" + n_(res.per.Mu, 1) + "\\ \\text{kip-ft},\\quad V_u=" + K(Math.abs(res.F.Vmax)) + "\\times" + n_(res.geom.b_ft, 2) + "=" + n_(res.per.Vu, 1) + "\\ \\text{kip (per reinforced pile)},\\quad R_u=" + n_(res.per.Ru, 2) + "\\ \\text{kip/ft}");
+  P(f.note + '. Mobilised passive is rebalanced (λ_u) for the factored loads.');
+  P('Why per reinforced pile, not per ft: the free-earth analysis is a plane-strain model, so M and V come out per ft of wall. The real wall is not uniform. Only the reinforced piles (one every b = ' + f1(res.geom.b_ft, 3) + ' ft) have steel. The unreinforced primary piles are plain concrete and cannot carry vertical bending tension. So the vertical bending from the whole width b is collected by one reinforced pile: M_pile = M_ft x b, V_pile = V_ft x b (FHWA 8.12.4.2). The primary piles carry a different demand: the lateral pressure on their face spans horizontally to the reinforced piles on each side.');
+  E("w_{u}=\\max_z\\big|p_{n,u}(z)\\big|=" + n_(res.pw.wu, 0) + "\\ \\text{psf at EL }" + n_(res.pw.z, 2) + "\\ \\ (\\text{service }" + n_(res.pw.ws, 0) + "\\ \\text{psf})\\ \\Rightarrow\\ \\text{horizontal span demand on primary piles}", 'Structural designer, Sec. E');
+  E("\\rho=10.91\\times10^{-7}\\frac{(H+D)^4}{EI}=" + (res.geom.rho < 0.001 ? res.geom.rho.toExponential(2).replace(/e([-+]\d+)/, '\\times10^{$1}') : n_(res.geom.rho, 4)) + ",\\quad \\log\\rho=" + n_(res.geom.logrho, 2), 'FHWA Fig. 8-60a');
+
+  if (res.basal.applicable) {
+    const b = res.basal; H('G. Basal heave (' + b.layer + ')');
+    E("FS_{BH}=\\frac{N_cs_u}{\\bar\\gamma H+q" + (isFinite(b.Bp) ? "-s_uH/D_{stiff}" : "") + "}=\\frac{" + n_(b.Nc, 2) + "\\times" + n_(b.su, 0) + "}{" + n_(b.gbar, 1) + "\\times" + n_(b.H, 2) + "+" + n_(I.q, 0) + (isFinite(b.Bp) ? "-" + n_(b.su, 0) + "\\times" + n_(b.H, 2) + "/" + n_(b.Bp, 2) : "") + "}=" + n_(b.FS, 2) + ",\\quad N_s=\\frac{\\bar\\gamma H}{s_u}=" + n_(b.Ns, 2) + "\\le4", isFinite(b.Bp) ? 'FHWA Eq. 8-9, §8.11.4' : 'FHWA Eq. 8-10, §8.11.4');
+  }
+  if (res.hyd.applicable) { const h = res.hyd; H('H. Hydraulic heave (' + h.layer + ')'); E("FS_{HY}=\\frac{i_{cr}}{i}=\\frac{\\gamma'/\\gamma_w}{\\Delta h/L_f}=\\frac{" + n_(h.icr, 3) + "}{" + n_(h.i, 3) + "}=" + n_(h.FS, 2), 'FHWA §3.6.5, §8.12.2.3'); }
+  return B;
+}
+/* Demand / capacity checks. DCR = FS_required / FS_provided (≤ 1.00 passes); for LRFD DCR = Σγ·M / φ·MR */
+function checksList(res) {
+  const I = res.I, L = [], ot = res.ot, dc = (fs, req) => isFinite(fs) ? req / fs : 0;
+  if (I.meth === 'LRFD') L.push({ n: 'Overturning about slab, mode ' + res.mode + ' (LRFD)', dn: 'Σγ·M_O', cn: 'φp·M_R', dem: ot.MOu / 1000, cap: I.phiP * ot.MR / 1000, u: 'kip-ft/ft', fs: res.prov, req: 1, ref: 'FHWA §8.9.2.4; AASHTO 11.5.6-1' });
+  else L.push({ n: 'Overturning about slab, mode ' + res.mode + (I.meth === 'Fs' ? ' (Fs on strength)' : ''), dn: 'M_O', cn: 'M_R', dem: ot.MO / 1000, cap: ot.MR / 1000, u: 'kip-ft/ft', fs: res.prov, req: I.meth === 'Fp' ? I.FSp : I.FSs, ref: I.meth === 'Fp' ? 'FHWA §8.10.2, Fig. 8-59' : 'FHWA §8.10.2; CIRIA 104' });
+  L.push({ n: 'Sliding toward excavation', dn: 'F_SL', cn: 'Pp + R_slab', dem: res.sl.Fd / 1000, cap: (res.sl.Pp + res.slab.R) / 1000, u: 'kip/ft', fs: res.FSsl, req: I.FSsl, ref: 'Horizontal equilibrium' });
+  if (res.basal.applicable) {
+    const b = res.basal;
+    L.push({ n: 'Basal heave (' + b.layer + ')', dn: 'γH + q', cn: 'Nc·su', dem: b.gbar * b.H + I.q - (isFinite(b.Bp) ? b.su * b.H / b.Bp : 0), cap: b.Nc * b.su, u: 'psf', fs: b.FS, req: I.FSbh, ref: isFinite(b.Bp) ? 'FHWA Eq. 8-9' : 'FHWA Eq. 8-10' });
+    L.push({ n: 'Stability number Ns = γH/su', dn: 'Ns', cn: 'limit', dem: b.Ns, cap: 4, u: '-', fs: NaN, req: NaN, dcr: b.Ns / 4, ref: 'FHWA §8.11.4' });
+  } else L.push({ n: 'Basal heave', na: 'N/A - drained soil at excavation grade (' + res.basal.layer + ')', ref: 'FHWA §8.12.2.3' });
+  if (res.hyd.applicable) L.push({ n: 'Hydraulic heave (' + res.hyd.layer + ')', dn: 'i', cn: 'i_cr', dem: res.hyd.i, cap: res.hyd.icr, u: '-', fs: res.hyd.FS, req: I.FShy, ref: 'FHWA Eq. 3-33, §8.12.2.3' });
+  else L.push({ n: 'Hydraulic heave', na: 'N/A - no upward seepage gradient at the design toe', ref: '' });
+  L.forEach(c => { if (c.na) return; if (c.dcr == null) c.dcr = dc(c.fs, c.req); c.ok = c.dcr <= 1 + 1e-9; });
+  return L;
+}
+const fmtV = (x, d = 2) => x == null || isNaN(x) ? '-' : !isFinite(x) ? 'inf' : x.toFixed(d);
+const OPT_SEL = I => [
+  ['Active theory', { rankine: 'Rankine', coulomb: 'Coulomb' }[I.thA], I.thA === 'coulomb' ? 'da/phi\' = ' + I.dA : ''],
+  ['Passive theory', { rankine: 'Rankine', coulomb: 'Coulomb', logspiral: 'Log-spiral (Caquot–Kerisel)' }[I.thP], I.thP !== 'rankine' ? 'dp/phi\' = ' + I.dP : ''],
+  ['Driving state', { active: 'Active, Ka', atrest: 'At rest, K0', avg: 'Average of Ka and K0', aepSand: 'Apparent pressure — sand', aepClay: 'Apparent pressure — stiff clay' }[I.cond], I.cond === 'aepClay' ? 'C = ' + I.aepC : ''],
+  ['Pore pressure', I.water === 'seep' ? 'Linear seepage' : 'Hydrostatic', ''],
+  ['Minimum pressure', '30 pcf (MEFP)', I.mefp ? 'applied' : 'not applied'],
+  ['Building surcharge', 'Boussinesq strip load', (I.bldg || []).filter(b => b.q > 0 && b.B > 0).length + ' load(s)'],
+  ['Embedment method', { Fp: 'Fp (ASD)', Fs: 'Fs (strength)', LRFD: 'LRFD' }[I.meth], I.meth === 'Fp' ? 'Fp = ' + I.FSp : I.meth === 'Fs' ? 'Fs = ' + I.FSs : 'phi_p = ' + I.phiP],
+  ['Load factors', { AASHTO: 'AASHTO Strength I', ACI: 'ACI 318 / ASCE 7' }[I.lfBasis], '']];
+const ASSUME = res => [
+  'Single lateral support at the slab acting as a pin; wall rigid below the slab for the free-earth embedment check (FHWA 8.10.2). Deflections and staged construction need a soil-structure interaction analysis (FHWA 8.12.2).',
+  'Vertical wall, level grades, same strata both sides. Elevations in ft (positive up); pressures in psf and forces/moments per ft of wall unless noted.',
+  'Uniform surcharge q acts on the full retained grade (dp = K q). Building footings are Boussinesq strip loads parallel to the wall of unlimited length (conservative for finite buildings), doubled for a non-yielding wall (AASHTO 3.11.6.2), acting from the footing base to the toe as ES loads; below the slab in mode B they are ignored (they would resist).',
+  'Overturning: moments about the slab, weaker of mode A / mode B governs. Sliding: whole wall translating toward the excavation, resisted by full passive in front plus slab friction (slab self-weight less uplift x tan delta on the bearing layer; undrained: min(su B_s, N/2), AASHTO 10.6.3.4). Other loads on the slab are conservatively ignored.',
+  'DCR = required FS / provided FS (LRFD: factored demand / factored resistance); DCR <= 1.00 passes.',
+  'Load factors: ' + res.LF.note + '.',
+  'Free-earth moments are not reduced for flexibility (Rowe, FHWA Fig. 8-60); log rho is reported. Hydraulic heave uses the average gradient of the linear head-loss model; confirm with a flow net where marginal.',
+  'Not included: slab structural capacity and slab-wall connection, pile axial resistance (AASHTO 10.8.3), ACI 318 pile flexure/shear design (Mu, Vu, Ru are provided), seismic pressures (FHWA 3.10) and global stability (FHWA 8.11.10.2).'];
+
+/* ==== PDF report (async: equations rendered with MathJax → vector) ==== */
+async function buildPDF(res, jsPDF, tex2svg) {
+  const I = res.I, doc = new jsPDF({ unit: 'mm', format: 'letter' });
+  const PW = 215.9, PH = 279.4, mL = 18, mR = 18, CW = PW - mL - mR; let y = 20;
+  const INK = PDFC.ink, MUT = PDFC.muted;
+  const newPage = () => { doc.addPage(); y = 22; };
+  const need = h => { if (y + h > PH - 18) newPage(); };
+  const cache = new Map();
+  const math = async tex => { if (!tex2svg) return null; if (cache.has(tex)) return cache.get(tex); let g = null; try { const s = await tex2svg(tex); g = s ? mjParse(s) : null; } catch (e) { g = null; } cache.set(tex, g); return g; };
+  const H1 = t => { need(16); y += 4; doc.setFont('helvetica', 'bold'); doc.setFontSize(12.5); doc.setTextColor(...INK); doc.text(ascii(t), mL, y); y += 2.2; doc.setDrawColor(...PDFC.grid); doc.setLineWidth(0.3); doc.line(mL, y, PW - mR, y); y += 5.5; };
+  const H2 = t => { need(24); y += 3; doc.setFont('helvetica', 'bold'); doc.setFontSize(10.2); doc.setTextColor(...INK); doc.text(ascii(t), mL, y); y += 5; };
+  const P = (t, o = {}) => { doc.setFont('helvetica', o.i ? 'italic' : 'normal'); doc.setFontSize(o.size || 9.3); doc.setTextColor(...(o.c || INK)); const ls = doc.splitTextToSize(ascii(t), CW - (o.ind || 0)); ls.forEach(l => { need(4.6); doc.text(l, mL + (o.ind || 0), y); y += 4.2; }); y += o.gap == null ? 1.6 : o.gap; };
+  const EQ = async (tex, ref, size = 10.5) => {
+    const g = await math(tex);
+    if (g) {
+      const k = size * 25.4 / 72 / 1000; let s = size;
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(7.8);
+      const refW = ref ? doc.getTextWidth(ascii(ref)) + 5 : 0;
+      let below = false, avail = CW - 6 - refW;
+      if (ref && g.w * k > avail) { below = true; avail = CW - 6; }
+      if (g.w * k > avail) s = size * avail / (g.w * k);
+      const kk = s * 25.4 / 72 / 1000, asc = g.asc * kk, desc = g.desc * kk;
+      need(asc + desc + (below ? 7 : 3.5));
+      y += asc; mjDraw(doc, g, mL + 4, y, s, INK);
+      if (ref) { doc.setFont('helvetica', 'normal'); doc.setFontSize(7.8); doc.setTextColor(...MUT); if (below) { y += desc + 3; doc.text(ascii(ref), PW - mR, y, { align: 'right' }); y += 1; } else doc.text(ascii(ref), PW - mR, y, { align: 'right' }); }
+      y += (below ? 0 : desc) + 3.5;
+    } else {
+      doc.setFont('courier', 'normal'); doc.setFontSize(8.6); doc.setTextColor(...INK);
+      const ls = doc.splitTextToSize(ascii(texPlain(tex)), CW - 40);
+      ls.forEach((l, i) => { need(4.4); doc.text(l, mL + 4, y); if (i === 0 && ref) { doc.setFont('helvetica', 'normal'); doc.setFontSize(7.8); doc.setTextColor(...MUT); doc.text(ascii(ref), PW - mR, y, { align: 'right' }); doc.setFont('courier', 'normal'); doc.setFontSize(8.6); doc.setTextColor(...INK); } y += 4.1; });
+      y += 1.5;
+    }
+  };
+  const T = async (head, rows, widths, o = {}) => {
+    const fs = o.fs || 8.2, rh = fs * 0.5 + 1.7, tw = widths.reduce((a, b) => a + b, 0), ws = widths.map(w => w * CW / tw);
+    const hg = []; for (const h of head) hg.push(/^\$.*\$$/.test(h) ? await math(h.slice(1, -1)) : null);
+    const align = i => (o.align ? o.align[i] : (i === 0 ? 'left' : 'right'));
+    const drawHead = () => {
+      doc.setFillColor(...PDFC.netF); doc.rect(mL, y - rh + 1.2, CW, rh + 0.6, 'F');
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(fs); doc.setTextColor(...INK);
+      let x = mL; head.forEach((h, i) => {
+        const al = align(i);
+        if (hg[i]) { const s = fs * 0.95, kk = s * 25.4 / 72 / 1000, w = hg[i].w * kk; const xx = al === 'left' ? x + 1 : x + ws[i] - 1 - w; mjDraw(doc, hg[i], xx, y, s, INK); }
+        else doc.text(ascii(h), al === 'left' ? x + 1 : x + ws[i] - 1, y, { align: al });
+        x += ws[i];
+      });
+      y += rh;
+    };
+    need(rh * 2 + 2); drawHead();
+    rows.forEach(r => {
+      const cells = r.cells || r;
+      doc.setFontSize(fs); const wrapped = cells.map((c, i) => o.wrap && o.wrap[i] ? doc.splitTextToSize(ascii(c), ws[i] - 2) : [ascii(c)]);
+      const lines = Math.max(...wrapped.map(w => w.length)), hh = rh + (lines - 1) * fs * 0.42;
+      if (y + hh > PH - 18) { newPage(); drawHead(); }
+      doc.setFont('helvetica', r._bold ? 'bold' : 'normal'); doc.setFontSize(fs);
+      let x = mL;
+      wrapped.forEach((ls, i) => {
+        const al = align(i); doc.setTextColor(...((r._col && r._col[i]) || INK));
+        ls.forEach((l, j) => { let s = l; if (!(o.wrap && o.wrap[i])) { const maxw = ws[i] - 2; while (doc.getTextWidth(s) > maxw && s.length > 3) s = s.slice(0, -2) + '.'; } doc.text(s, al === 'left' ? x + 1 : x + ws[i] - 1, y + j * fs * 0.42, { align: al }); });
+        x += ws[i];
+      });
+      doc.setDrawColor(...PDFC.grid); doc.setLineWidth(0.15); doc.line(mL, y + hh - rh + 1.5, mL + CW, y + hh - rh + 1.5); y += hh;
+    });
+    y += 3;
+  };
+  const fig = (F, cap) => { const h = CW * F.h / F.w; need(h + 10); F.pdf(doc, mL, y, CW); y += h + 3; doc.setFont('helvetica', 'italic'); doc.setFontSize(8.3); doc.setTextColor(...MUT); doc.text(ascii(cap), mL, y); y += 6; };
+  const blocks = async B => { let prev = null; for (const b of B) { if (b.k === 'h') H2(b.t); else if (b.k === 'p') { if (prev === 'eq') y += 0.8; P(b.t, { size: 8.9, c: [60, 68, 72] }); } else { if (prev === 'p') y += 1; await EQ(b.tex, b.ref); } prev = b.k; } };
+  const OK = [60, 122, 85], NG = [180, 70, 47];
+
+  // ---- title
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(16.5); doc.setTextColor(...INK);
+  doc.text('Secant pile wall: calculation package', mL, y); y += 6.5;
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5); doc.setTextColor(...MUT);
+  doc.text('Cantilever wall laterally supported by the foundation slab; free-earth support about the slab; FHWA NHI-07-071 basis', mL, y); y += 7;
+  await T(['Project', 'Wall', 'Prepared by', 'Checked by', 'Date'], [[I.proj || '-', I.wall || '-', I.by || '-', I.chk || '-', I.date || '-']], [60, 25, 35, 35, 25], { fs: 8.6, align: ['left', 'left', 'left', 'left', 'left'] });
+
+  // ---- 1 design basis: overall diagram, assumptions, inputs
+  H1('1  Design basis');
+  fig(sectionFig(res), 'Figure 1 - Section, service lateral pressures (psf), shear (kip/ft) and moment (kip-ft/ft) per ft of wall; factored V, M dashed.');
+  H2('1.1 Assumptions');
+  ASSUME(res).forEach(t => P('- ' + t, { size: 8.2, gap: 0.4 }));
+  H2('1.2 Inputs');
+  const u2 = (a, b) => a.map((r, i) => [...r, ...(b[i] || ['', '', ''])]);
+  const gA = [
+    ['Top of wall', f1(I.top, 2), 'EL ft'], ['Retained grade', f1(I.zr, 2), 'EL ft'], ['Excavation grade', f1(I.ze, 2), 'EL ft'],
+    ['Slab centroid (brace)', f1(I.zb, 2), 'EL ft'], ['Slab thickness t_s / width B_s', f1(I.slabT, 2) + ' / ' + f1(I.slabB, 1), 'ft'], ['Concrete unit weight', f1(I.gc, 0), 'pcf'], ['Retained height H', f1(I.zr - I.ze, 2), 'ft'],
+    ['Stiff stratum below exc.', I.Dst > 0 ? f1(I.Dst, 1) : 'none', 'ft'], ['Uniform surcharge q', f1(I.q, 0) + ' (' + I.qType + ')', 'psf']];
+  const gB = [
+    ['Water behind wall', f1(I.wtr, 2), 'EL ft'], ['Water in front of wall', f1(I.wte, 2), 'EL ft'], ['Pile diameter d', f1(I.dia, 1), 'in'],
+    ['Pile spacing s / overlap', f1(I.sp, 1) + ' / ' + f1(res.geom.ov, 1), 'in'], ['Reinforced piles, b', (I.pat === 'alt' ? 'alternate' : 'all') + ', ' + f1(res.geom.b_ft, 2), 'ft'],
+    ["Concrete f'c", f1(I.fc, 1), 'ksi'], ['Effective stiffness Ie/Ig', f1(I.crack, 2), '-'], ['Unit weight of water', f1(GW, 1), 'pcf']];
+  await T(['Geometry / loads', 'Value', 'Unit', 'Groundwater / piles', 'Value', 'Unit'], u2(gA, gB), [44, 22, 14, 46, 26, 14], { fs: 7.8, align: ['left', 'right', 'left', 'left', 'right', 'left'] });
+  await T(['Layer', 'Top (EL ft)', 'Bot. (EL ft)', 'Type', '$\\gamma_m\\,(\\text{pcf})$', '$\\gamma_{sat}\\,(\\text{pcf})$', "$\\phi'\\,(\\text{deg})$", "$c'\\,(\\text{psf})$", '$s_u\\,(\\text{psf})$', 'OCR (-)'],
+    res.coef.map(c => [c.l.name, c.top == null ? 'surface' : f1(c.top, 2), c.bot == null ? '-' : f1(c.bot, 2), c.l.type === 'U' ? 'Undrained' : 'Drained', f1(c.l.gm, 0), f1(c.l.gs, 0), f1(c.l.phi, 1), f1(c.l.c || 0, 0), c.l.type === 'U' ? f1(c.l.su, 0) : '-', f1(c.l.ocr || 1, 2)]), [30, 17, 17, 16, 17, 18, 15, 14, 14, 13], { fs: 7.6 });
+  if (res.bld.length) await T(['Building load (Boussinesq)', 'Q (psf)', 'x1 (ft)', 'B (ft)', 'Footing base (EL ft)', 'P_h (kip/ft)', 'Centroid (EL ft)', 'p_max (psf)'],
+    res.bld.map(r => [r.b.name || '-', f1(r.b.q, 0), f1(r.b.x, 1), f1(r.b.B, 1), f1(r.b.zf, 2), fk(r.P, 2), f1(r.zc, 2), f1(r.pmax, 0)]), [36, 15, 13, 13, 25, 21, 23, 20], { fs: 7.6 });
+  const oRows = OPT_SEL(I).map(([g, o, x]) => { const d = OPTS.find(r => r[0] === g && r[1] === o) || ['', '', '', '', '']; return [g, o + (x ? ' (' + x + ')' : ''), d[2], d[4]]; });
+  await T(['Option', 'Selection', 'Definition', 'Ref.'], oRows, [26, 42, 86, 26], { fs: 7.2, wrap: [false, true, true, true], align: ['left', 'left', 'left', 'left'] });
+  await T(['Design criterion', 'Value', 'Unit', 'Design criterion', 'Value', 'Unit'], u2([
+    ['Required ' + (I.meth === 'Fp' ? 'Fp' : I.meth === 'Fs' ? 'Fs' : 'phi_p'), f1(I.meth === 'Fp' ? I.FSp : I.meth === 'Fs' ? I.FSs : I.phiP, 2), '-'], ['Required FS sliding', f1(I.FSsl, 2), '-'],
+    ['Required FS basal heave', f1(I.FSbh, 2), '-'], ['Required FS hydraulic heave', f1(I.FShy, 2), '-']], [
+    ['Slab friction factor tan d / tan phi\'', f1(I.muF, 2), '-'], ['Minimum embedment', f1(I.Dmin, 2), 'ft'],
+    ['Increase on computed D', f1(I.inc, 1), '%'], ['Round D up to', f1(I.round, 2), 'ft']]), [44, 16, 14, 50, 18, 16], { fs: 7.8, align: ['left', 'right', 'left', 'left', 'right', 'left'] });
+  fig(planFig(res), 'Figure 2 - Secant pile plan (d, s, overlap and interlock thickness in inches).');
+
+  // ---- 2 demand / capacity summary
+  H1('2  Demand / capacity summary');
+  const ck = checksList(res);
+  await T(['Check', 'Demand', 'Capacity', 'Unit', 'FS prov.', 'FS req.', 'DCR', 'Status', 'Basis'], ck.map(c => c.na
+    ? { cells: [c.n, '-', '-', '-', '-', '-', '-', 'N/A', c.na], _col: [null, null, null, null, null, null, null, MUT, MUT] }
+    : { cells: [c.n + ' (' + c.dn + ' vs ' + c.cn + ')', fmtV(c.dem, c.u === '-' ? 3 : 2), fmtV(c.cap, c.u === '-' ? 3 : 2), c.u, fmtV(c.fs), fmtV(c.req), c.dcr.toFixed(2), c.ok ? 'OK' : 'NG', c.ref], _col: [null, null, null, MUT, null, null, c.ok ? OK : NG, c.ok ? OK : NG, MUT], _bold: 0 }),
+    [46, 15, 15, 14, 12, 12, 11, 11, 44], { fs: 7.4, wrap: [true, false, false, false, false, false, false, false, true], align: ['left', 'right', 'right', 'left', 'right', 'right', 'right', 'left', 'left'] });
+  await T(['Design result', 'Service', 'Factored', 'Unit'], [
+    { cells: ['Design embedment D (D_OT / D_SL = ' + f1(res.Dot, 2) + ' / ' + f1(res.Dsl, 2) + ')', f1(res.Dd, 2), '-', 'ft'], _bold: 1 },
+    ['Pile toe elevation / pile length', f1(res.toe, 2) + ' / ' + f1(res.len, 2), '-', 'EL ft / ft'],
+    ['Governing mechanism', res.mode === 'A' ? 'Mode A - toe toward excavation' : 'Mode B - toe into retained soil', '', ''],
+    ['Slab reaction R', f1(res.svc.R / 1000, 2), f1(res.fac.R / 1000, 2), 'kip/ft'],
+    ['Max moment per ft (at EL ' + f1(res.S.Mpos >= -res.S.Mneg ? res.S.zMp : res.S.zMn, 2) + ')', f1(res.S.Mmax / 1000, 1), f1(res.F.Mmax / 1000, 1), 'kip-ft/ft'],
+    ['Max shear per ft', f1(Math.abs(res.S.Vmax) / 1000, 2), f1(Math.abs(res.F.Vmax) / 1000, 2), 'kip/ft'],
+    { cells: ['Per reinforced pile (x b = ' + f1(res.geom.b_ft, 2) + ' ft): M / V', f1(res.per.M, 1) + ' / ' + f1(res.per.V, 1), f1(res.per.Mu, 1) + ' / ' + f1(res.per.Vu, 1), 'kip-ft / kip'], _bold: 1 },
+    ['Primary (unreinforced) pile: max net lateral pressure w (EL ' + f1(res.pw.z, 2) + ')', f1(res.pw.ws, 0), f1(res.pw.wu, 0), 'psf'],
+    ['Rowe flexibility log rho', f1(res.geom.logrho, 2), '-', '-']], [88, 34, 34, 24], { fs: 8, align: ['left', 'right', 'right', 'left'] });
+  if (res.hinge) P(`FHWA hinge method (Fig. 8-70), service: T = ${f1(res.hinge.T / 1000, 2)} kip/ft, subgrade reaction ${f1(res.hinge.R / 1000, 2)} kip/ft; tributary T = ${f1(res.hinge.Tt / 1000, 2)} kip/ft (free-earth R = ${f1(res.svc.R / 1000, 2)} kip/ft).`, { size: 7.8, c: MUT });
+  if (res.warnings.length) { H2('Notes'); res.warnings.forEach(w => P('- ' + w, { size: 8, c: NG, gap: 0.4 })); }
+
+  // ---- 3 calculations
+  H1('3  Calculations');
+  H2('3.1 Earth-pressure coefficients (unfactored' + (I.meth === 'Fs' ? '; design values with Fs' : '') + ')');
+  const ch = ['Layer', "$\\phi'\\,(\\text{deg})$", '$K_a$', '$K_p$', '$K_0$', '$K_{a,R}$'], cw = [40, 18, 18, 18, 18, 18];
+  if (I.meth === 'Fs') { ch.push("$\\phi'_d\\,(\\text{deg})$", '$K_{a,d}$', '$K_{p,d}$'); cw.push(18, 18, 18); }
+  await T(ch, res.coef.map(c => { const r = [c.l.name, f1(c.u.phi, 1), c.u.Ka.toFixed(3), c.u.Kp.toFixed(3), c.u.K0.toFixed(3), c.u.KaR.toFixed(3)]; if (c.f) r.push(f1(c.f.phi, 2), c.f.Ka.toFixed(3), c.f.Kp.toFixed(3)); return r; }), cw, { fs: 7.8 });
+  H2('3.2 Pressures at key elevations (service, psf; EL in ft)');
+  const kh = ['Point', 'EL', 'Layer', '$\\sigma_v$', '$u_r$', "$\\sigma'_v$", '$p_{d}$', '$\\Delta p_q$', '$\\Delta p_h$', '$p_{tot}$', '$p_{tot}+u_r$', '$u_e$', '$p_p$'];
+  await T(kh, res.rows.map(r => [r.t, f1(r.z, 2), r.layer, f1(r.sv, 0), f1(r.ur, 0), f1(r.svp, 0), f1(r.sSoil, 0), f1(r.sQ, 0), f1(r.sB, 0), f1(r.sDrive, 0), f1(r.tot, 0), f1(r.ue, 0), f1(r.pE, 0)]), [30, 12, 20, 12, 11, 12, 12, 11, 11, 12, 14, 11, 12], { fs: 6.8 });
+  P('p_d = driving earth pressure; dp_q = uniform surcharge; dp_h = building (Boussinesq); p_tot = p_d + dp_q + dp_h; p_p = available passive in front (effective, excl. water).' + (res.mode === 'B' ? ' Mode B also uses passive behind the wall below the slab and active in front.' : ''), { size: 7.4, c: MUT });
+  H2('3.3 Resultants about the slab (mode ' + res.mode + ', service)');
+  await T(['Component', 'F (kip/ft)', 'Centroid (EL ft)', 'Arm (ft)', 'M (kip-ft/ft)'], res.compTab.map(c => [c.name, fk(c.F, 3), f1(c.zc, 2), f1(I.zb - c.zc, 2), fk(c.Mo, 2)]), [80, 22, 26, 20, 26], { fs: 7.8 });
+  H2('3.4 Equations and substitution');
+  await blocks(calcBlocks(res));
+
+  H1('4  References');
+  REFS.forEach((r, i) => P(`[${i + 1}] ${r}`, { size: 7.4, gap: 0.3 }));
+  const n = doc.getNumberOfPages();
+  for (let i = 1; i <= n; i++) { doc.setPage(i); doc.setFont('helvetica', 'normal'); doc.setFontSize(7.6); doc.setTextColor(...MUT); doc.text(ascii(`${I.proj || ''}  |  ${I.wall || ''}  |  Secant pile wall design`), mL, PH - 9); doc.text(`Page ${i} of ${n}`, PW - mR, PH - 9, { align: 'right' }); }
+  return doc;
+}
+
+</script>
+<script>
+const today = new Date().toISOString().slice(0, 10);
+const HELP = {
+ thA: { rankine: 'Smooth wall, δa = 0. Slightly conservative; FHWA default when wall friction is uncertain.', coulomb: 'Planar wedge with wall friction δa ≤ 2/3 φ′ (FHWA §3.6.1.2). Within ~10% of log-spiral for active.' },
+ thP: { rankine: 'Smooth wall, δp = 0. Lowest passive; use when wall friction cannot be relied on.', coulomb: 'Planar wedge; only valid for δp ≤ φ′/3 (FHWA §3.2.5) — overestimates Kp beyond that.', logspiral: 'Curved failure surface (Caquot–Kerisel, FHWA Fig. 3-12). FHWA-recommended for passive; δp ≤ φ′/2.' },
+ cond: { active: 'Wall moves enough to mobilise active (≈0.1–0.4% of height). Temporary or flexible walls. EH factor 1.50.', atrest: 'No lateral strain: stiff, slab-braced permanent walls installed before excavation, or movement-sensitive neighbours. EH 1.35.', avg: 'Stiff wall with limited movement. EH 1.50 (conservative).', aepSand: 'FHWA Fig. 8-67 trapezoid (0.65 Ka γ′ H²) above the excavation; active below. Single-support walls in sand at final grade. EH 1.35.', aepClay: 'FHWA Fig. 8-68 trapezoid, p = C γ H (C = 0.2–0.4). Temporary cuts in stiff clay without free water. EH 1.35.' },
+ water: { hydro: 'Greatest unbalanced head (FHWA §3.6.5). Use with a cut-off into low-permeability ground.', seep: 'Head lost uniformly around the toe (FHWA Eq. 3-33). Pervious ground, dewatered excavation, no cut-off.' },
+ meth: { Fp: 'ASD: passive moment about the slab ≥ Fp × driving moment. FHWA minimum 1.5; 1.5–2.0 typical.', Fs: 'Divide tan φ′, c′ and su by Fs on both sides, then balance moments. Required before using Rowe moment reduction.', LRFD: 'φp × passive moment ≥ Σ γ × driving moments; φp = 0.75 (AASHTO Tab. 11.5.6-1).' },
+ lfBasis: { AASHTO: 'Strength I: EH 1.50 active / 1.35 at-rest & apparent; ES 1.50 or LS 1.75; WA 1.00.', ACI: 'Building code: 1.6 on soil, water and surcharge (H).' },
+ qType: { ES: 'Earth / dead-load surcharge (stockpiles, pavements, adjacent footings): 1.50.', LS: 'Live-load surcharge (traffic, construction equipment): 1.75.' }
+};
+const SCHEMA = [
+ { g: 'Project', open: false, f: [
+  { id: 'proj', l: 'Project', t: 'text', v: 'Example cut-and-cover box' }, { id: 'wall', l: 'Wall designation', t: 'text', v: 'SPW-1' },
+  { id: 'by', l: 'Prepared by', t: 'text', v: '' }, { id: 'chk', l: 'Checked by', t: 'text', v: '' }, { id: 'date', l: 'Date', t: 'text', v: today }] },
+ { g: 'Geometry', open: true, f: [
+  { id: 'top', l: 'Top of wall', u: 'EL ft', v: 100 }, { id: 'zr', l: 'Ground behind wall (retained grade)', u: 'EL ft', v: 100 },
+  { id: 'ze', l: 'Ground in front of wall (excavation grade)', u: 'EL ft', v: 80 }, { id: 'zb', l: 'Brace: foundation slab centroid', u: 'EL ft', v: 82 },
+  { id: 'slabT', l: 'Slab thickness t_s', u: 'ft', v: 3 },
+  { id: 'slabB', l: 'Slab width perpendicular to wall B_s (bearing on soil)', u: 'ft', v: 60 },
+  { id: 'gc', l: 'Concrete unit weight γc', u: 'pcf', v: 150 },
+  { id: 'muF', l: 'Slab–soil friction factor tan δ / tan φ′ (1.0 cast-in-place, 0.8 precast)', u: '–', v: 1.0 },
+  { id: 'Dst', l: 'Depth to stiff stratum below excavation grade (0 = none)', u: 'ft', v: 0 }] },
+ { g: 'Secant piles', open: false, f: [
+  { id: 'dia', l: 'Pile diameter d', u: 'in', v: 36 }, { id: 'sp', l: 'Center-to-center spacing s', u: 'in', v: 30 },
+  { id: 'pat', l: 'Reinforced piles', t: 'sel', o: [['alt', 'Secondary only (every other)'], ['all', 'All piles']], v: 'alt' },
+  { id: 'fc', l: "Concrete f′c", u: 'ksi', v: 5 }, { id: 'crack', l: 'Effective stiffness Ie/Ig', u: '–', v: 0.5 }] },
+ { g: 'Groundwater', open: true, f: [
+  { id: 'wtr', l: 'Water level behind wall', u: 'EL ft', v: 90 }, { id: 'wte', l: 'Water level in front of wall', u: 'EL ft', v: 78 },
+  { id: 'water', l: 'Pore-pressure model', t: 'sel', o: [['hydro', 'Hydrostatic both sides'], ['seep', 'Linear seepage around toe']], v: 'hydro' }] },
+ { g: 'Surcharge', open: true, f: [
+  { id: 'q', l: 'Uniform surcharge on retained grade', u: 'psf', v: 300 },
+  { id: 'qType', l: 'Surcharge type', t: 'sel', o: [['ES', 'Earth / dead surcharge (ES)'], ['LS', 'Live-load surcharge (LS)']], v: 'LS' }] },
+ { g: 'Earth pressure', open: true, f: [
+  { id: 'cond', l: 'Driving state behind wall', t: 'sel', o: [['active', 'Active, Ka'], ['avg', 'Average of Ka and K0'], ['atrest', 'At rest, K0'], ['aepSand', 'Apparent pressure — sand (Fig. 8-67)'], ['aepClay', 'Apparent pressure — stiff clay (Fig. 8-68)']], v: 'active' },
+  { id: 'aepC', l: 'Stiff-clay ordinate C (p = C γH)', u: '–', v: 0.3, dep: ['cond', 'aepClay'] },
+  { id: 'thA', l: 'Active coefficient theory', t: 'sel', o: [['rankine', 'Rankine'], ['coulomb', 'Coulomb']], v: 'rankine' },
+  { id: 'dA', l: 'Active wall friction δa/φ′', u: '–', v: 0.67, dep: ['thA', 'coulomb'] },
+  { id: 'thP', l: 'Passive coefficient theory', t: 'sel', o: [['logspiral', 'Log-spiral (Caquot–Kerisel)'], ['coulomb', 'Coulomb'], ['rankine', 'Rankine']], v: 'logspiral' },
+  { id: 'dP', l: 'Passive wall friction δp/φ′', u: '–', v: 0.33, dep: ['thP', 'logspiral', 'coulomb'] },
+  { id: 'mefp', l: 'Apply 30 pcf minimum active (MEFP)', t: 'chk', v: true }] },
+ { g: 'Design criteria', open: true, f: [
+  { id: 'meth', l: 'Embedment safety method', t: 'sel', o: [['Fp', 'Fp — factor on passive (ASD)'], ['Fs', 'Fs — factor on strength'], ['LRFD', 'LRFD — φp = 0.75']], v: 'Fp' },
+  { id: 'FSp', l: 'Required Fp', u: '–', v: 1.5, dep: ['meth', 'Fp'] }, { id: 'FSs', l: 'Required Fs', u: '–', v: 1.5, dep: ['meth', 'Fs'] }, { id: 'phiP', l: 'Resistance factor φp', u: '–', v: 0.75, dep: ['meth', 'LRFD'] },
+  { id: 'FSsl', l: 'Required FS, sliding', u: '–', v: 1.5 }, { id: 'FSbh', l: 'Required FS, basal heave', u: '–', v: 1.5 }, { id: 'FShy', l: 'Required FS, hydraulic heave', u: '–', v: 1.5 },
+  { id: 'Dmin', l: 'Minimum embedment', u: 'ft', v: 5 }, { id: 'inc', l: 'Increase on computed embedment', u: '%', v: 0 }, { id: 'round', l: 'Round embedment up to', u: 'ft', v: 0.5 },
+  { id: 'lfBasis', l: 'Load factors for demands', t: 'sel', o: [['AASHTO', 'AASHTO LRFD Strength I'], ['ACI', 'ACI 318 / ASCE 7 (1.6H)']], v: 'AASHTO' }] }
+];
+const DEF_LAYERS = [
+ { name: 'Fill', bot: 92, type: 'D', gm: 120, gs: 125, phi: 30, c: 0, su: 0, ocr: 1 },
+ { name: 'Sand (SM)', bot: 75, type: 'D', gm: 125, gs: 130, phi: 33, c: 0, su: 0, ocr: 1 },
+ { name: 'Glacial till', bot: 40, type: 'D', gm: 130, gs: 135, phi: 38, c: 0, su: 0, ocr: 1 }];
+let LAYERS = DEF_LAYERS.map(l => Object.assign({}, l));
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const LC = [['name', 'Name', 'text', 96, ''], ['bot', 'Bottom', 'n', 58, 'EL ft'], ['type', 'Type', 'sel', 52, 'D/U'], ['gm', 'γ', 'n', 48, 'pcf'], ['gs', 'γsat', 'n', 48, 'pcf'], ['phi', 'φ′', 'n', 44, 'deg'], ['c', 'c′', 'n', 46, 'psf'], ['su', 'su', 'n', 52, 'psf'], ['ocr', 'OCR', 'n', 42, '–']];
+const BC = [['name', 'Name', 'text', 96, ''], ['q', 'Q', 'n', 58, 'psf'], ['x', 'x1', 'n', 50, 'ft'], ['B', 'B', 'n', 50, 'ft'], ['zf', 'Base', 'n', 58, 'EL ft']];
+const DEF_BLDG = [{ name: 'Adjacent bldg', q: 2000, x: 10, B: 30, zf: 96 }];
+let BLOADS = DEF_BLDG.map(b => Object.assign({}, b));
+
+function renderInputs() {
+ let h = '';
+ for (const g of SCHEMA) {
+  h += `<details${g.open ? ' open' : ''}><summary>${g.g}</summary>`;
+  for (const f of g.f) {
+   const lab = `<label for="${f.id}">${f.l}${f.u ? `<span class="u">${f.u}</span>` : ''}</label>`, dep = f.dep ? ` data-dep='${JSON.stringify(f.dep)}'` : '';
+   if (f.t === 'text') h += `<div class="row wide"${dep}>${lab}<input id="${f.id}" type="text" value="${esc(f.v)}"></div>`;
+   else if (f.t === 'sel') h += `<div class="row wide"${dep}>${lab}<select id="${f.id}">${f.o.map(o => `<option value="${o[0]}"${o[0] === f.v ? ' selected' : ''}>${esc(o[1])}</option>`).join('')}</select></div>${HELP[f.id] ? `<div class="help" id="h-${f.id}"></div>` : ''}`;
+   else if (f.t === 'chk') h += `<div class="row"${dep}>${lab}<input id="${f.id}" type="checkbox"${f.v ? ' checked' : ''}></div>`;
+   else h += `<div class="row"${dep}>${lab}<input id="${f.id}" type="number" step="any" inputmode="decimal" value="${f.v}"></div>`;
+  }
+  h += `</details>`;
+  if (g.g === 'Surcharge') h += `<details open><summary>Soil layers, top down</summary><div class="scroll"><table class="lt" id="lt"></table></div>
+   <button class="btn2" id="addL" type="button" style="margin-top:8px">Add layer</button>
+   <p class="help" style="margin-top:8px">Same strata on both sides. The last layer extends indefinitely. Type D = drained (φ′, c′; water added), U = undrained total stress (su; φ′ still used for K0). Units pcf, psf, degrees.</p></details>
+   <details open><summary>Building surcharges (Boussinesq)</summary><div class="scroll"><table class="lt" id="bt"></table></div>
+   <button class="btn2" id="addB" type="button" style="margin-top:8px">Add building load</button>
+   <p class="help" style="margin-top:8px">Each footing is a strip load parallel to the wall: Q = bearing pressure (psf), x1 = clear offset from back of wall to near edge (ft), B = footing width (ft), Base = footing bearing elevation (EL ft). Lateral pressure Δph = (2Q/π)[β − sin β cos(β + 2θ1)] (AASHTO Eq. 3.11.6.2-1), load factor ES.</p></details>`;
+ }
+ $('#inputs').innerHTML = h;
+ renderLayers(); renderBldg();
+ $('#addB').onclick = () => { BLOADS.push({ name: 'Bldg ' + (BLOADS.length + 1), q: 1500, x: 10, B: 20, zf: num('zr') - 4 }); renderBldg(); schedule(); };
+ $('#addL').onclick = () => { const n = LAYERS.length, last = LAYERS[n - 1]; const above = n > 1 ? LAYERS[n - 2].bot : num('zr'); last.bot = +(above - 10).toFixed(2); LAYERS.push(Object.assign({}, last, { name: 'Layer ' + (n + 1) })); renderLayers(); schedule(); };
+ $('#inputs').addEventListener('input', schedule);
+ $('#inputs').addEventListener('change', schedule);
+}
+const num = id => parseFloat($('#' + id).value);
+function renderBldg() {
+ let h = '<tr>' + BC.map(c => `<th>${c[1]}${c[4] ? `<br><span class="u">${c[4]}</span>` : ''}</th>`).join('') + '<th></th></tr>';
+ BLOADS.forEach((b, i) => {
+  h += '<tr>' + BC.map(c => `<td><input aria-label="Building load ${i + 1} ${c[1]} ${c[4]}" data-b="${i}" data-k="${c[0]}" style="width:${c[3]}px" ${c[2] === 'n' ? 'type="number" step="any" inputmode="decimal"' : 'type="text"'} value="${esc(b[c[0]] ?? '')}"></td>`).join('') +
+   `<td><button class="rm" type="button" data-rmb="${i}" aria-label="Remove building load ${i + 1}">×</button></td></tr>`;
+ });
+ if (!BLOADS.length) h += `<tr><td colspan="${BC.length + 1}" class="inf" style="text-align:left">No building loads.</td></tr>`;
+ const t = $('#bt'); t.innerHTML = h;
+ t.querySelectorAll('input').forEach(el => el.addEventListener('input', () => { const b = BLOADS[+el.dataset.b], k = el.dataset.k; b[k] = k === 'name' ? el.value : parseFloat(el.value); }));
+ t.querySelectorAll('[data-rmb]').forEach(x => x.onclick = () => { BLOADS.splice(+x.dataset.rmb, 1); renderBldg(); schedule(); });
+}
+function renderLayers() {
+ let h = '<tr>' + LC.map(c => `<th>${c[1]}${c[4] ? `<br><span class="u">${c[4]}</span>` : ''}</th>`).join('') + '<th></th></tr>';
+ LAYERS.forEach((l, i) => {
+  h += '<tr>' + LC.map(c => {
+   if (c[0] === 'bot' && i === LAYERS.length - 1) return `<td class="inf">∞</td>`;
+   const al = `aria-label="Layer ${i + 1} ${c[1]}" data-l="${i}" data-k="${c[0]}" style="width:${c[3]}px"`;
+   if (c[2] === 'sel') return `<td><select ${al}><option value="D"${l.type !== 'U' ? ' selected' : ''}>D</option><option value="U"${l.type === 'U' ? ' selected' : ''}>U</option></select></td>`;
+   const dis = (c[0] === 'su' && l.type !== 'U') || (c[0] === 'c' && l.type === 'U') ? ' disabled' : '';
+   return `<td><input ${al} ${c[2] === 'n' ? 'type="number" step="any" inputmode="decimal"' : 'type="text"'} value="${esc(l[c[0]] ?? '')}"${dis}></td>`;
+  }).join('') + `<td>${LAYERS.length > 1 ? `<button class="rm" type="button" data-rm="${i}" aria-label="Remove layer ${i + 1}">×</button>` : ''}</td></tr>`;
+ });
+ const t = $('#lt'); t.innerHTML = h;
+ t.querySelectorAll('input,select').forEach(el => el.addEventListener('input', () => { const l = LAYERS[+el.dataset.l], k = el.dataset.k; l[k] = (k === 'name' || k === 'type') ? el.value : parseFloat(el.value); if (k === 'type') renderLayers(); }));
+ t.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { LAYERS.splice(+b.dataset.rm, 1); renderLayers(); schedule(); });
+}
+function gather() {
+ const I = {};
+ for (const g of SCHEMA) for (const f of g.f) { const el = $('#' + f.id); I[f.id] = f.t === 'chk' ? el.checked : f.t ? el.value : parseFloat(el.value); }
+ I.layers = LAYERS.map(l => Object.assign({}, l));
+ I.bldg = BLOADS.map(b => Object.assign({}, b));
+ return I;
+}
+function applyInputs(I) {
+ for (const g of SCHEMA) for (const f of g.f) if (I[f.id] !== undefined) { const el = $('#' + f.id); if (f.t === 'chk') el.checked = !!I[f.id]; else el.value = I[f.id]; }
+ if (Array.isArray(I.layers) && I.layers.length) LAYERS = I.layers.map(l => Object.assign({ type: 'D', su: 0, ocr: 1, c: 0 }, l));
+ if (Array.isArray(I.bldg)) BLOADS = I.bldg.map(b => Object.assign({}, b));
+ renderLayers(); renderBldg();
+}
+function syncDeps(I) {
+ document.querySelectorAll('[data-dep]').forEach(r => { const d = JSON.parse(r.dataset.dep); r.hidden = !d.slice(1).includes(I[d[0]]); });
+ for (const k in HELP) { const el = $('#h-' + k); if (el) el.textContent = HELP[k][I[k]] || ''; }
+}
+function numsOk(I) {
+ const bad = [];
+ for (const g of SCHEMA) for (const f of g.f) if (!f.t && !isFinite(I[f.id])) bad.push(f.l);
+ I.layers.forEach((l, i) => LC.forEach(c => { if (c[2] !== 'n' || (c[0] === 'bot' && i === I.layers.length - 1)) return; if ((c[0] === 'su' && l.type !== 'U') || (c[0] === 'c' && l.type === 'U')) return; if (!isFinite(l[c[0]])) bad.push(`Layer ${i + 1} ${c[1]}`); }));
+ I.bldg.forEach((b, i) => BC.forEach(c => { if (c[2] === 'n' && !isFinite(b[c[0]])) bad.push(`Building load ${i + 1} ${c[1]}`); }));
+ return bad;
+}
+let timer = null, RES = null, TAB = 'sec', dirty = { der: true, calc: true, plan: true };
+function schedule() { clearTimeout(timer); $('#main').classList.add('busy'); timer = setTimeout(run, 220); }
+const pill = s => `<span class="pill ${s}">${s === 'ok' ? 'OK' : s === 'ng' ? 'NG' : 'N/A'}</span>`;
+
+function run() {
+ const I = gather();
+ syncDeps(I);
+ I.layers.forEach(l => { if (l.type !== 'U') l.su = 0; else l.c = 0; if (!isFinite(l.ocr)) l.ocr = 1; });
+ try { localStorage.setItem('spw-inputs-v2', JSON.stringify(I)); } catch (e) { }
+ const bad = numsOk(I), msgs = $('#msgs');
+ $('#main').classList.remove('busy');
+ if (bad.length) { RES = null; msgs.innerHTML = `<li>Enter a number for: ${bad.map(esc).join(', ')}.</li>`; $('#dl').disabled = true; return; }
+ let res;
+ try { res = design(I); } catch (e) { RES = null; msgs.innerHTML = `<li>Calculation stopped: ${esc(e.message)}. Check the inputs.</li>`; $('#dl').disabled = true; return; }
+ msgs.innerHTML = (res.errors || []).map(e => `<li>${esc(e)}</li>`).join('') + (res.warnings || []).map(w => `<li class="w">${esc(w)}</li>`).join('');
+ if (res.errors && res.errors.length) { RES = null; $('#dl').disabled = true; $('#summary').innerHTML = ''; ['sec', 'der', 'calc', 'plan'].forEach(t => $('#tab-' + t).innerHTML = ''); return; }
+ RES = res; $('#dl').disabled = false;
+ try { localStorage.setItem('spw-struct-demands', JSON.stringify(structDemands(res))); } catch (e) { } dirty = { der: true, calc: true, plan: true };
+ renderSummary(res); renderSection(res); renderTab(TAB);
+}
+function renderSummary(r) {
+ const ck = checksList(r);
+ const rows = ck.map(c => c.na ? `<tr><td>${esc(c.n)}</td><td>—</td><td>—</td><td>—</td><td>—</td><td>${pill('na')}</td><td class="ref">${esc(c.na)}</td></tr>`
+  : `<tr><td>${esc(c.n)}<br><span class="note">${esc(c.dn)} vs ${esc(c.cn)}</span></td><td>${fmtV(c.dem, c.u === '-' ? 3 : 2)}</td><td>${fmtV(c.cap, c.u === '-' ? 3 : 2)}</td><td class="l">${c.u === '-' ? '–' : esc(c.u)}</td><td>${isNaN(c.fs) ? '—' : fmtV(c.fs) + ' / ' + fmtV(c.req)}</td><td><b>${c.dcr.toFixed(2)}</b> ${pill(c.ok ? 'ok' : 'ng')}</td><td class="ref">${esc(c.ref)}</td></tr>`).join('');
+ const S = r.S, F = r.F;
+ $('#summary').innerHTML = `
+ <div class="big">
+  <div><b>${f1(r.Dd, 2)} ft</b><span>Embedment below excavation</span></div>
+  <div><b>EL ${f1(r.toe, 2)}</b><span>Pile toe · length ${f1(r.len, 2)} ft</span></div>
+  <div><b>${f1(r.per.Mu, 0)} k-ft</b><span>Mu per reinforced pile</span></div>
+  <div><b>${f1(r.per.Ru, 1)} k/ft</b><span>Factored slab reaction</span></div>
+ </div>
+ <div class="sum">
+  <div class="scroll"><table class="t"><tr><th>Check</th><th>Demand</th><th>Capacity</th><th class="l">Unit</th><th>FS prov. / req.</th><th>DCR</th><th class="l">Basis</th></tr>${rows}</table><p class="note">DCR = FS required / FS provided (LRFD: factored demand / factored resistance); ≤ 1.00 passes.</p></div>
+  <div class="scroll"><table class="t"><tr><th>Structural demand</th><th>Service</th><th>Factored</th></tr>
+   <tr><td>Slab reaction, kip/ft</td><td>${f1(r.svc.R / 1000, 2)}</td><td>${f1(r.fac.R / 1000, 2)}</td></tr>
+   <tr><td>Max moment, kip-ft/ft</td><td>${f1(S.Mmax / 1000, 1)}</td><td>${f1(F.Mmax / 1000, 1)}</td></tr>
+   <tr><td>Max shear, kip/ft</td><td>${f1(Math.abs(S.Vmax) / 1000, 2)}</td><td>${f1(Math.abs(F.Vmax) / 1000, 2)}</td></tr>
+   <tr><td>Primary pile: max net lateral pressure, psf (EL ${f1(r.pw.z, 1)})</td><td>${f1(r.pw.ws, 0)}</td><td>${f1(r.pw.wu, 0)}</td></tr>
+   <tr class="g"><td>Per reinforced pile, b = ${f1(r.geom.b_ft, 2)} ft</td><td>M ${f1(r.per.M, 0)} · V ${f1(r.per.V, 0)}</td><td>Mu ${f1(r.per.Mu, 0)} · Vu ${f1(r.per.Vu, 0)}</td></tr>
+   <tr><td>Governing mechanism</td><td colspan="2">${r.mode === 'A' ? 'A — toe toward excavation' : 'B — toe into retained soil'}</td></tr>
+   ${r.hinge ? `<tr><td>FHWA hinge / tributary brace load</td><td colspan="2">${f1(r.hinge.T / 1000, 2)} / ${f1(r.hinge.Tt / 1000, 2)} k/ft</td></tr>` : ''}
+   <tr><td>Rowe flexibility, log ρ</td><td colspan="2">${f1(r.geom.logrho, 2)}</td></tr>
+  </table><p class="note">${esc(r.LF.note)}.</p></div>
+ </div>`;
+}
+function renderSection(r) {
+ $('#tab-sec').innerHTML = `<div class="card">${sectionFig(r).svg()}</div>
+ <p class="note">Service pressures per foot of wall at the design embedment. Dashed green is available passive; solid green is the mobilised part (λ = ${r.svc.lam.toFixed(3)}) that balances moments about the slab. Shear and moment: service solid, factored dashed.</p>`;
+}
+function renderPlan(r) {
+ const I = r.I;
+ $('#tab-plan').innerHTML = `<div class="card">${planFig(r).svg()}</div>
+ <div class="scroll"><table class="t" style="margin-top:14px;max-width:640px"><tr><th>Secant geometry and stiffness</th><th>Value</th></tr>
+ <tr><td>Diameter d / spacing s</td><td>${f1(I.dia, 1)} in / ${f1(I.sp, 1)} in</td></tr>
+ <tr><td>Overlap d − s</td><td>${f1(r.geom.ov, 2)} in</td></tr>
+ <tr><td>Wall thickness at interlock, 2√(r² − (s/2)²)</td><td>${f1(r.geom.t_in, 2)} in</td></tr>
+ <tr><td>Tributary width per reinforced pile (FHWA §8.12.4.2)</td><td>${f1(r.geom.b_ft, 3)} ft</td></tr>
+ <tr><td>Ec = 57000√f′c</td><td>${f1(r.geom.Ec / 1000, 0)} ksi</td></tr>
+ <tr><td>Ie = (Ie/Ig)·πd⁴/64 per reinforced pile</td><td>${f1(r.geom.Ie, 0)} in⁴</td></tr>
+ <tr><td>Rowe flexibility ρ, log ρ (FHWA Fig. 8-60a)</td><td>${r.geom.rho.toExponential(2)}, ${f1(r.geom.logrho, 2)}</td></tr></table></div>`;
+}
+function tbl(head, rows, cls) { return `<div class="scroll"><table class="t">${'<tr>' + head.map((h, i) => `<th${cls && cls[i] ? ` class="${cls[i]}"` : ''}>${h}</th>`).join('') + '</tr>'}${rows.map(r => '<tr>' + r.map((c, i) => `<td${cls && cls[i] ? ` class="${cls[i]}"` : ''}>${c}</td>`).join('') + '</tr>').join('')}</table></div>`; }
+function renderCalc(r) {
+ const I = r.I;
+ let h = '<h3>Earth-pressure coefficients</h3>';
+ const ch = ['Layer', 'Type', 'φ′', 'Ka', 'Kp', 'K0', 'Ka Rankine']; if (I.meth === 'Fs') ch.push('φ′d', 'Ka,d', 'Kp,d');
+ h += tbl(ch, r.coef.map(c => { const x = [esc(c.l.name), c.l.type === 'U' ? 'U' : 'D', f1(c.u.phi, 1) + '°', c.u.Ka.toFixed(3), c.u.Kp.toFixed(3), c.u.K0.toFixed(3), c.u.KaR.toFixed(3)]; if (c.f) x.push(f1(c.f.phi, 2) + '°', c.f.Ka.toFixed(3), c.f.Kp.toFixed(3)); return x; }));
+ h += '<h3>Pressures at key elevations (service, psf)</h3>';
+ const kh = ['Point', 'EL ft', 'Layer', 'σv', 'u behind', 'σ′v', 'pd soil', 'Δp from q', 'Δp bldg', 'p total', 'p total + u', 'u front', 'σv front', 'pp front'];
+ if (r.mode === 'B') kh.push('pp behind', 'pa front');
+ h += tbl(kh, r.rows.map(x => { const a = [esc(x.t), f1(x.z, 2), esc(x.layer), f1(x.sv, 0), f1(x.ur, 0), f1(x.svp, 0), f1(x.sSoil, 0), f1(x.sQ, 0), f1(x.sB, 0), f1(x.sDrive, 0), f1(x.tot, 0), f1(x.ue, 0), f1(x.svE, 0), f1(x.pE, 0)]; if (r.mode === 'B') a.push(f1(x.pR, 0), f1(x.aE, 0)); return a; }));
+ if (r.bld.length) { h += '<h3>Building surcharges, Boussinesq (service)</h3>'; h += tbl(['Load', 'Q psf', 'x1 ft', 'B ft', 'Base EL ft', 'Ph kip/ft', 'Centroid EL ft', 'Δph,max psf', 'at EL ft'], r.bld.map(b => [esc(b.b.name || ''), f1(b.b.q, 0), f1(b.b.x, 1), f1(b.b.B, 1), f1(b.b.zf, 2), fk(b.P, 2), f1(b.zc, 2), f1(b.pmax, 0), f1(b.zmax, 2)])); }
+ h += `<h3>Resultants about the slab (mode ${r.mode}, service)</h3>`;
+ h += tbl(['Component', 'F kip/ft', 'Centroid EL ft', 'Arm ft', 'M kip-ft/ft'], r.compTab.map(c => [esc(c.name), fk(c.F, 3), f1(c.zc, 2), f1(I.zb - c.zc, 2), fk(c.Mo, 2)]));
+ h += '<h3>Embedment and factors</h3>';
+ h += tbl(['Quantity', 'Value'], [
+  ['Mode A factor (unfactored MR/MO)', isFinite(r.g1A) ? r.g1A.toFixed(3) : 'no mechanism'], ['Mode B factor (unfactored MR/MO)', isFinite(r.g1B) ? r.g1B.toFixed(3) : 'no mechanism'],
+  ['Provided, in the selected method', f1(r.prov, 3)], ['D for rotation / sliding', f1(r.Dot, 3) + ' / ' + f1(r.Dsl, 3) + ' ft'], ['Design D, toe EL', f1(r.Dd, 2) + ' ft, EL ' + f1(r.toe, 2)],
+  ['Overturning moment MO / resisting moment MR (service)', fk(r.ot.MO, 2) + ' / ' + fk(r.ot.MR, 2) + ' kip-ft/ft'],
+  ['Slab friction: N (self-weight − uplift) / R_slab, on ' + esc(r.slab.layer), fk(r.slab.N, 2) + ' / ' + fk(r.slab.R, 2) + ' kip/ft' + (r.slab.U_ ? ' (min(su·Bs, N/2))' : ' (μ = ' + r.slab.mu.toFixed(3) + ')')],
+  ['Sliding force / sliding resistance (Pp + R_slab)', fk(r.sl.Fd, 2) + ' / ' + fk(r.sl.Pp + r.slab.R, 2) + ' kip/ft'],
+  ['λ service / factored', r.svc.lam.toFixed(4) + ' / ' + r.fac.lam.toFixed(4)],
+  ...(r.aep ? [['Apparent pressure ordinate p, H1', f1(r.aep.p, 0) + ' psf, ' + f1(r.aep.H1, 2) + ' ft']] : []),
+  ...(r.basal.applicable ? [['Basal heave: Nc, block width, FS, Ns', `${r.basal.Nc.toFixed(2)}, ${isFinite(r.basal.Bp) ? f1(r.basal.Bp, 1) + ' ft (stiff stratum)' : 'unbounded (one-sided wall)'}, ${f1(r.basal.FS, 2)}, ${f1(r.basal.Ns, 2)}`]] : []),
+  ...(r.hyd.applicable ? [['Hydraulic: i, icr, FS', `${r.hyd.i.toFixed(3)}, ${r.hyd.icr.toFixed(3)}, ${f1(r.hyd.FS, 2)}`]] : [])]);
+ $('#tab-calc').innerHTML = h;
+}
+let derToken = 0;
+async function renderDer(r) {
+ const my = ++derToken, el = $('#tab-der');
+ const B = calcBlocks(r);
+ const eqs = [];
+ el.innerHTML = '<div class="prose">' + (window.MJ_STATE === 'failed' ? '<p>Equation typesetting did not load; showing plain text.</p>' : '') + B.map(b => {
+  if (b.k === 'h') return `<h3>${esc(b.t)}</h3>`;
+  if (b.k === 'p') return `<p>${esc(b.t)}</p>`;
+  eqs.push(b.tex); return `<div class="eqr"><div class="m" data-i="${eqs.length - 1}"><span class="plain">${esc(texPlain(b.tex))}</span></div><span class="rf">${esc(b.ref)}</span></div>`;
+ }).join('') + '</div>';
+ if (window.MJ_STATE !== 'ready') return;
+ for (const node of el.querySelectorAll('.m[data-i]')) {
+  if (my !== derToken) return;
+  try { const out = await MathJax.tex2svgPromise(eqs[+node.dataset.i], { display: true }); if (my !== derToken) return; node.replaceChildren(out); } catch (e) { }
+ }
+}
+function renderGuide() {
+ $('#tab-guide').innerHTML = '<div class="prose"><p>Each option below changes a specific term in the derivation. Use cases follow FHWA NHI-07-071 guidance; numbers in brackets refer to the References tab.</p></div>' +
+  tbl(['Group', 'Option', 'Definition', 'Use when', 'Ref.'], OPTS.map(o => o.map(esc)), ['l', 'l', 'l', 'l', 'l']);
+}
+function renderRefs() { $('#tab-ref').innerHTML = `<div class="prose"><ol class="refs">${REFS.map(x => `<li>${esc(x)}</li>`).join('')}</ol><p>Figure, table and equation numbers refer to FHWA NHI-07-071 (December 2007) unless noted.</p></div>`; }
+function renderTab(t) {
+ if (!RES) return;
+ if (t === 'der' && dirty.der) { dirty.der = false; renderDer(RES); }
+ if (t === 'calc' && dirty.calc) { dirty.calc = false; renderCalc(RES); }
+ if (t === 'plan' && dirty.plan) { dirty.plan = false; renderPlan(RES); }
+}
+$('#tabs').addEventListener('click', e => {
+ const b = e.target.closest('button[data-t]'); if (!b) return; TAB = b.dataset.t;
+ document.querySelectorAll('#tabs button').forEach(x => x.setAttribute('aria-selected', x === b ? 'true' : 'false'));
+ ['sec', 'der', 'calc', 'plan', 'guide', 'ref'].forEach(t => $('#tab-' + t).hidden = t !== TAB);
+ renderTab(TAB);
+});
+document.addEventListener('mj-ready', () => { if (TAB === 'der' && RES) renderDer(RES); else dirty.der = true; });
+
+/* ---- downloads ---- */
+let dlCap;
+function getDownloads() {
+ if (dlCap !== undefined) return dlCap;
+ dlCap = (window.claude && typeof window.claude.use === 'function') ? window.claude.use('downloads').catch(() => null) : Promise.resolve(null);
+ return dlCap;
+}
+async function saveFile(name, data, fallback) {
+ const dl = await getDownloads(), note = $('#dlnote');
+ if (dl) {
+  try { await dl.save({ filename: name, data }); note.textContent = 'Saved ' + name + '.'; }
+  catch (e) { note.textContent = e && e.code === 'declined' ? 'Download cancelled.' : e && e.code === 'rate_limited' ? 'A save prompt is already open.' : 'Downloads are unavailable in this view.'; }
+ } else { fallback(); note.textContent = 'Saved ' + name + '.'; }
+}
+async function mjReady(ms) {
+ if (window.MJ_STATE === 'ready') return true; if (window.MJ_STATE === 'failed') return false;
+ return new Promise(res => { const t = setTimeout(() => res(false), ms); document.addEventListener('mj-ready', () => { clearTimeout(t); res(window.MJ_STATE === 'ready'); }, { once: true }); });
+}
+$('#dl').addEventListener('click', async () => {
+ if (!RES) return; const note = $('#dlnote'), btn = $('#dl');
+ if (!window.jspdf) { note.textContent = 'PDF library did not load. Check the connection and reload.'; return; }
+ btn.disabled = true; note.textContent = 'Typesetting equations…';
+ try {
+  const ok = await mjReady(12000);
+  const tex2svg = ok ? async tex => { const n = await MathJax.tex2svgPromise(tex, { display: true }); const s = n.querySelector('svg'); return s ? s.outerHTML : null; } : null;
+  note.textContent = 'Building report…';
+  const doc = await buildPDF(RES, window.jspdf.jsPDF, tex2svg);
+  const name = ((RES.I.wall || 'secant-wall') + '_design_report.pdf').replace(/[^\w.-]+/g, '_');
+  await saveFile(name, doc.output('blob'), () => doc.save(name));
+  if (!ok) note.textContent += ' Equations shown as plain text (typesetting unavailable).';
+ } catch (e) { note.textContent = 'Report failed: ' + e.message; }
+ btn.disabled = false;
+});
+/* ---- exact demands for the structural designer (same D, s, pattern, f'c, b) ---- */
+function structDemands(r) {
+  const I = r.I, zM = r.F.Mpos >= -r.F.Mneg ? r.F.zMp : r.F.zMn, step = Math.max(1, Math.floor(r.prof.length / 400));
+  return {
+    source: 'secant_pile_wall_designer', version: 1, created: new Date().toISOString(), proj: I.proj, wall: I.wall,
+    geometry: { D: I.dia, s: I.sp, pat: I.pat, fc: I.fc, b_ft: r.geom.b_ft, top: I.top, toe: r.toe, ze: I.ze, zb: I.zb },
+    loadBasis: r.LF.note,
+    perFt: { Mu: r.F.Mmax / 1000, zMu: zM, Vu: Math.abs(r.F.Vmax) / 1000, zVu: r.F.zV, Ms: r.S.Mmax / 1000, Vs: Math.abs(r.S.Vmax) / 1000, Ru: r.fac.R / 1000, wu: r.pw.wu, zwu: r.pw.z, ws: r.pw.ws },
+    perPile: { Mu: r.per.Mu, Vu: r.per.Vu, M: r.per.M, V: r.per.V },
+    profile: r.prof.filter((p, i) => i % step === 0).map(p => [+p.z.toFixed(3), +p.netF.toFixed(1), +p.net.toFixed(1)]),
+    vm: r.F.pts.filter((p, i) => i % 6 === 0).map(p => [+p.z.toFixed(3), +(p.V / 1000).toFixed(3), +(p.M / 1000).toFixed(3)])
+  };
+}
+$('#sdx').addEventListener('click', () => { if (!RES) return; const d = structDemands(RES), name = ((RES.I.wall || 'secant-wall') + '_structural_demands.json').replace(/[^\w.-]+/g, '_'), txt = JSON.stringify(d); saveFile(name, txt, () => { const a = document.createElement('a'); a.href = 'data:application/json,' + encodeURIComponent(txt); a.download = name; a.click(); }); });
+$('#exp').addEventListener('click', () => { const I = gather(); const name = ((I.wall || 'secant-wall') + '_inputs.json').replace(/[^\w.-]+/g, '_'); const txt = JSON.stringify(I, null, 1); saveFile(name, txt, () => { const a = document.createElement('a'); a.href = 'data:application/json,' + encodeURIComponent(txt); a.download = name; a.click(); }); });
+$('#imp').addEventListener('click', () => $('#impf').click());
+$('#impf').addEventListener('change', e => { const f = e.target.files[0]; if (!f) return; const rd = new FileReader(); rd.onload = () => { try { applyInputs(JSON.parse(rd.result)); schedule(); $('#dlnote').textContent = 'Loaded ' + f.name + '.'; } catch (err) { $('#dlnote').textContent = 'That file is not a valid inputs file.'; } }; rd.readAsText(f); e.target.value = ''; });
+
+renderInputs(); renderGuide(); renderRefs();
+try { const s = localStorage.getItem('spw-inputs-v2'); if (s) applyInputs(JSON.parse(s)); } catch (e) { }
+run();
+</script>
+</body>
+</html>
