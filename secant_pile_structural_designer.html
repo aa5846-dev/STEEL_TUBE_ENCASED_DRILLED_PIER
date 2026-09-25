@@ -115,6 +115,8 @@ ol.refs{padding-left:22px;max-width:92ch}ol.refs li{margin:6px 0}
   <button class="btn2" id="exp" type="button">Save inputs</button>
   <button class="btn2" id="imp" type="button">Load inputs</button>
   <input type="file" id="impf" accept=".json,application/json" hidden>
+  <button class="btn2" id="lnk" type="button" title="Load *_structural_demands.json exported by secant_pile_wall_designer.html">Load wall-designer demands</button>
+  <input type="file" id="lnkf" accept=".json,application/json" hidden>
   <button class="btn" id="dl" type="button">Download PDF calculation</button>
   <span class="dlnote" id="dlnote" role="status"></span>
  </div>
@@ -122,6 +124,7 @@ ol.refs{padding-left:22px;max-width:92ch}ol.refs li{margin:6px 0}
 <div class="wrap">
  <aside id="inputs" aria-label="Inputs"></aside>
  <main id="main">
+  <div id="linkbar"></div>
   <ul class="msgs" id="msgs"></ul>
   <div id="summary"></div>
   <div class="tabs" role="tablist" id="tabs">
@@ -188,7 +191,7 @@ function validate(I, s) {
   if (!s) e.push('Select a steel shape.');
   else ['d', 'bf', 'tw', 'tf', 'A', 'Ix', 'Sx', 'Zx', 'ry'].forEach(k => { if (!(s[k] > 0)) e.push('Steel section ' + k + ' must be positive.'); });
   if (s && s.d >= I.D) e.push('Steel section depth exceeds the pile diameter.');
-  if (I.Mu < 0 || I.Vu < 0 || I.wu < 0) e.push('Enter Mu, Vu and wu as positive magnitudes.');
+  if (I.Mu < 0 || I.Vu < 0 || I.wu < 0 || I.Ms < 0) e.push('Enter Mu, Vu and wu as positive magnitudes.');
   return { e, w };
 }
 
@@ -225,7 +228,7 @@ function design(I) {
   const Vn = 0.6 * Fy * Aw * Cv1;
 
   // ---- axial
-  const Lc = I.Lc * 12, Pu = I.Pu * bft; // kip per pile (+ compression)
+  const Lc = I.Lc * 12, Pu = I.Pu; // kip per reinforced pile (+ compression)
   let ax;
   if (Pu >= 0) {
     if (flexComp) { // AISC I2.1b encased composite
@@ -249,8 +252,15 @@ function design(I) {
   } else ax = { kind: 'tension', Pn: Fy * As, phi: 0.90, eq: 'D2-1' };
   const Pc = ax.phi * ax.Pn;
 
-  // ---- demands per pile
-  const Mu = I.Mu * bft * 12, Vu = I.Vu * bft; // kip-in, kip
+  // ---- demand transfer: plane-strain (per ft) results → per reinforced pile over its tributary width b
+  const Mu = I.Mu * 12, Vu = I.Vu; // per reinforced pile: kip-in, kip (input = per-ft wall demand × b)
+  const L = I.link || null, link = L ? { src: L, diffs: [] } : null;
+  if (L) {
+    const G = L.geometry, D1 = L.perFt, cmp = (n, a, b0, tol = 1e-6) => { if (Math.abs(a - b0) > tol * Math.max(1, Math.abs(b0))) link.diffs.push(`${n}: here ${+a.toFixed(3)}, wall designer ${+b0.toFixed(3)}`); };
+    cmp('Pile diameter D (in)', I.D, G.D); cmp('Spacing s (in)', I.s, G.s); if (I.pat !== G.pat) link.diffs.push(`Reinforced-pile pattern: here ${I.pat}, wall designer ${G.pat}`);
+    cmp("f'c secondary (ksi)", fc, G.fc); const PP = L.perPile; cmp('Mu per pile (kip-ft)', I.Mu, PP.Mu, 1e-3); cmp('Vu per pile (kip)', I.Vu, PP.Vu, 1e-3); cmp('Ms per pile (kip-ft)', I.Ms, PP.M, 1e-3); cmp('b (ft)', bft, G.b_ft, 1e-6); cmp('wu (psf)', I.wu, D1.wu, 1e-3);
+    if (link.diffs.length) warnings.push('Inputs differ from the linked wall-designer results, so the demands are no longer the analysed ones: ' + link.diffs.join('; ') + '. Reload the demands or re-run the wall designer.');
+  }
   const Mc = phib * Mn, Vc = phiv * Vn;
   const pr = Math.abs(Pu) / Pc, mr = Mu / Mc;
   const H1 = pr >= 0.2 ? pr + 8 / 9 * mr : pr / 2 + mr;
@@ -281,19 +291,28 @@ function design(I) {
     { n: 'Upper bound: uncracked transformed (secondary + primary)', EIsec: EIu, EIprim: EIp }
   ].map(r => { const EI = r.EIsec + r.EIprim, EIft = EI / bft; return Object.assign(r, { EI, EIft, Is_ft: EIft / E, Ic_ft: EIft / Ec, teq: Math.cbrt(EIft / Ec), EIkft2: EIft / 144 }); });
 
+  // ---- primary pile: vertical-bending compatibility (cracking) — decides whether αp > 0 is admissible
+  let crack = null;
+  if (nb === 2 && I.Ms > 0) {
+    const Msp = I.Ms * 12, EIsec = E * s.Ix + Math.min(0.7, 0.25 + 3 * As / Ag) * Ec * Ic, EIpu = Ecp * Ig;
+    const kap = Msp / (EIsec + EIpu), ft = Ecp * kap * R, fr = 7.5 * I.lam * Math.sqrt(fcp * 1000) / 1000;
+    crack = { Msp, EIsec, EIpu, kap, ft, fr, cracks: ft > fr };
+  }
+
   // ---- checks (per ft of wall)
   const ck = [];
   const push = (n, dem, cap, u, ref, extra) => ck.push(Object.assign({ n, dem, cap, u, ref, dcr: cap > 0 ? dem / cap : Infinity }, extra || {}));
-  push('Flexure, ' + (flexComp ? 'composite plastic (I3.3c)' : 'steel section alone (I3.3b, ' + flEq + ')'), I.Mu, Mc / 12 / bft, 'kip-ft/ft', 'AISC 360-22 ' + (flexComp ? 'I3.3(c)' : 'I3.3(b), ' + flEq));
-  push('Shear, steel web (' + shEq + ')', I.Vu, Vc / bft, 'kip/ft', 'AISC 360-22 I4.2(a), ' + shEq);
+  push('Reinforced pile flexure, ' + (flexComp ? 'composite plastic (I3.3c)' : 'steel section alone (I3.3b, ' + flEq + ')'), I.Mu, Mc / 12, 'kip-ft', 'AISC 360-22 ' + (flexComp ? 'I3.3(c)' : 'I3.3(b), ' + flEq), { pdem: I.Mu / bft, pcap: Mc / 12 / bft, pu: 'kip-ft/ft' });
+  push('Reinforced pile shear, steel web (' + shEq + ')', I.Vu, Vc, 'kip', 'AISC 360-22 I4.2(a), ' + shEq, { pdem: I.Vu / bft, pcap: Vc / bft, pu: 'kip/ft' });
   if (Pu !== 0) {
-    push(Pu > 0 ? 'Axial compression, ' + (ax.kind === 'comp' ? 'encased composite' : 'steel alone') : 'Axial tension, steel yielding', Math.abs(I.Pu), Pc / bft, 'kip/ft', 'AISC 360-22 ' + (ax.kind === 'comp' ? 'I2.1b, ' : ax.kind === 'steel' ? 'E3, E7, ' : '') + ax.eq);
+    push(Pu > 0 ? 'Axial compression, ' + (ax.kind === 'comp' ? 'encased composite' : 'steel alone') : 'Axial tension, steel yielding', Math.abs(I.Pu), Pc, 'kip', 'AISC 360-22 ' + (ax.kind === 'comp' ? 'I2.1b, ' : ax.kind === 'steel' ? 'E3, E7, ' : '') + ax.eq, { pdem: Math.abs(Pu) / bft, pcap: Pc / bft, pu: 'kip/ft' });
     ck.push({ n: 'Combined axial + flexure (' + (pr >= 0.2 ? 'H1-1a' : 'H1-1b') + ')', dem: H1, cap: 1, u: '-', ref: 'AISC 360-22 ' + (flexComp ? 'I5, ' : '') + 'H1.1', dcr: H1 });
   }
-  plain.forEach(p => push(p.n, p.dem, p.cap, p.u, 'ACI 318-19 ' + (p.Mn != null ? '14.5.2.1(a)' : 'Table 14.5.5.1') + ', 21.2.1', { plain: p }));
+  plain.forEach(p => push('Primary/plain: ' + p.n.replace('Plain concrete ', ''), p.dem, p.cap, p.u + ' (height)', 'ACI 318-19 ' + (p.Mn != null ? '14.5.2.1(a)' : 'Table 14.5.5.1') + ', 21.2.1', { plain: p }));
+  if (crack) ck.push({ n: 'Primary pile vertical cracking vs αp = ' + I.ap + (crack.cracks ? ' (cracks: αp must be 0)' : ' (uncracked)'), dem: crack.ft, cap: crack.fr, u: 'ksi', ref: 'ACI 318-19 19.2.3.1; compatibility', dcr: crack.ft / crack.fr, info: !(I.ap > 0) });
   ck.push({ n: 'Steel shape fits in pile with cover', dem: diag, cap: avail, u: 'in', ref: 'Geometry', dcr: diag / avail });
   if (flexComp) ck.push({ n: 'Minimum steel ratio As/Ag ≥ 1%', dem: 0.01, cap: rho, u: '-', ref: 'AISC 360-22 I2.1a(b)', dcr: 0.01 / rho });
-  ck.forEach(c => c.ok = c.dcr <= 1 + 1e-9);
+  ck.forEach(c => c.ok = c.info || c.dcr <= 1 + 1e-9);
   if (flexComp) warnings.push('Composite flexure (AISC I3.3c) requires steel anchors on the shape and encased-member detailing (I2.1a: continuous longitudinal bars and ties). Most secant pile walls have neither; use "steel alone" unless these are provided.');
   if (!(Lh > 0)) warnings.push('Steel flanges meet or overlap between reinforced piles; plain-concrete span checks are not applicable.');
   if (!s.db) warnings.push('Custom section: h/tw is taken as (d − 2tf)/tw and shear uses φv = 0.90 (G2.1b).');
@@ -303,7 +322,7 @@ function design(I) {
     g: { D, R, sp, nb, b, bft, ov, tint, diag, avail, Ag, As, Ac, rho, Ig, Ic, Ec, Ecp, n, Lh },
     fl: { lf, lpf, lrf, lw, lpw, lrw, Mp, Mns, flCls, flEq, webCls, Mnc, pf, Mn, phib, Mc, flexComp },
     sh: { Aw, lvA, kv, lv1, phiv, Cv1, shEq, Vn, Vc },
-    ax, Pc, dem: { Mu, Vu, Pu, pr, mr, H1 }, plain, pw: { w, Lh, hred, lam }, stiff, C1
+    ax, Pc, dem: { Mu, Vu, Pu, pr, mr, H1 }, plain, pw: { w, Lh, hred, lam }, stiff, C1, crack, link
   };
 }
 
@@ -540,6 +559,13 @@ function calcBlocks(r) {
   const I = r.I, s = r.s, g = r.g, fl = r.fl, sh = r.sh, ax = r.ax, B = [], H = t => B.push({ k: 'h', t }), P = t => B.push({ k: 'p', t }), E = (tex, ref) => B.push({ k: 'eq', tex, ref: ref || '' });
   const bf = g.bft;
 
+  H('0. Demands: plane-strain wall results to pile elements');
+  if (r.link) P('Demands linked from the wall designer (' + (r.link.src.wall || '') + ', ' + String(r.link.src.created).slice(0, 10) + '): factored envelope maxima of the free-earth analysis, ' + r.link.src.loadBasis + '. Mu at EL ' + f1(r.link.src.perFt.zMu, 2) + ', Vu at EL ' + f1(r.link.src.perFt.zVu, 2) + ', wu at EL ' + f1(r.link.src.perFt.zwu, 2) + '.' + (r.link.diffs.length ? ' WARNING: inputs were edited after linking.' : ''));
+  P('The wall analysis is plane strain, so it returns demands per ft of wall. The secant wall is not a uniform plate: steel is only in the reinforced piles, one every b. Unreinforced primary piles are plain concrete, crack under vertical bending tension, and are given no vertical flexural or shear strength. So the reinforced pile collects the vertical bending and shear of its whole tributary width b (FHWA 8.12.4.2). The primary piles carry a different load: the lateral pressure on their face, spanning horizontally between reinforced piles.');
+  E("M_{u,pile}=M_{u,ft}\\,b=" + n_(I.Mu, 1) + "\\ \\text{kip-ft}\\ \\ (M_{u,ft}=" + n_(I.Mu / g.bft, 2) + "\\ \\text{kip-ft/ft}\\times b=" + n_(g.bft, 3) + "\\ \\text{ft}),\\qquad V_{u,pile}=" + n_(I.Vu, 1) + "\\ \\text{kip}\\ \\ (" + n_(I.Vu / g.bft, 2) + "\\ \\text{kip/ft})", 'FHWA §8.12.4.2');
+  if (r.dem.Pu !== 0) E("P_{u,pile}=" + n_(I.Pu, 1) + "\\ \\text{kip}\\ \\ (" + n_(I.Pu / g.bft, 2) + "\\ \\text{kip/ft})");
+  E("\\text{Primary pile (horizontal span, per ft of height): }w_u=\\max_z|p_{n,u}(z)|=" + n_(I.wu, 0) + "\\ \\text{psf}\\ \\to\\ M(x),\\ V(x)\\ \\text{in Sec. E}");
+  E("\\text{Primary pile (vertical): }M_{prim}=0\\ \\text{(no strength assigned); compatibility cracking checked in Sec. G}");
   H('A. Geometry and materials');
   E("b=" + (g.nb === 2 ? "2s=2\\times" + n_(g.sp, 1) : "s=" + n_(g.sp, 1)) + "=" + n_(g.b, 1) + "\\ \\text{in}=" + n_(bf, 3) + "\\ \\text{ft}\\quad(\\text{wall width per reinforced pile})", 'FHWA §8.12.4');
   E("t_{int}=2\\sqrt{(D/2)^2-(s/2)^2}=2\\sqrt{" + n_(g.R, 2) + "^2-" + n_(g.sp / 2, 2) + "^2}=" + n_(g.tint, 2) + "\\ \\text{in},\\qquad D-s=" + n_(g.ov, 2) + "\\ \\text{in overlap}");
@@ -560,14 +586,14 @@ function calcBlocks(r) {
   E("\\text{Composite: }\\ \\int_{A_c^{+}}0.85f'_c\\,dA+\\int_{A_s}\\pm F_y\\,dA=0\\ \\Rightarrow\\ c=" + n_(pf.c, 2) + "\\ \\text{in},\\ \\ C_c=" + n_(pf.Cc, 0) + ",\\ C_s=" + n_(pf.Cs, 0) + ",\\ T_s=" + n_(pf.Ts, 0) + "\\ \\text{kip}", 'AISC I3.3(c), I1.2a');
   E("M_{n,c}=\\sum F_i\\,y_i=" + n_(pf.M / 12, 1) + "\\ \\text{kip-ft}\\quad(\\text{requires steel anchors})", 'AISC I3.3(c)');
   E("\\phi_bM_n=0.90\\times" + n_(fl.Mn / 12, 1) + "=" + n_(fl.Mc / 12, 1) + "\\ \\text{kip-ft/pile}\\ \\Rightarrow\\ \\frac{\\phi_bM_n}{b}=\\frac{" + n_(fl.Mc / 12, 1) + "}{" + n_(bf, 3) + "}=" + n_(fl.Mc / 12 / bf, 1) + "\\ \\text{kip-ft/ft}", fl.flexComp ? 'AISC I3.3(c)' : 'AISC I3.3(b)');
-  E("M_u=" + n_(I.Mu, 1) + "\\ " + cmpT(I.Mu, fl.Mc / 12 / bf) + "\\ " + n_(fl.Mc / 12 / bf, 1) + "\\ \\text{kip-ft/ft},\\quad DCR=" + n_(I.Mu / (fl.Mc / 12 / bf), 2) + okT(I.Mu <= fl.Mc / 12 / bf + 1e-9));
+  E("M_{u,pile}=" + n_(I.Mu, 1) + "\\ " + cmpT(I.Mu, fl.Mc / 12) + "\\ \\phi_bM_n=" + n_(fl.Mc / 12, 1) + "\\ \\text{kip-ft},\\quad DCR=" + n_(I.Mu / (fl.Mc / 12), 2) + okT(I.Mu <= fl.Mc / 12 + 1e-9));
 
   H('C. Shear');
   E("A_w=d\\,t_w=" + n_(s.d, 2) + "\\times" + n_(s.tw, 3) + "=" + n_(sh.Aw, 2) + "\\ \\text{in}^2", 'AISC G2.1');
   if (sh.shEq === 'G2.1(a)') E("\\frac{h}{t_w}=" + n_(fl.lw, 2) + "\\le2.24\\sqrt{E/F_y}=" + n_(sh.lvA, 2) + "\\ \\Rightarrow\\ \\phi_v=1.00,\\ C_{v1}=1.0", 'AISC G2.1(a)');
   else E("k_v=5.34,\\ \\ 1.10\\sqrt{k_vE/F_y}=" + n_(sh.lv1, 2) + "\\ \\Rightarrow\\ C_{v1}=" + n_(sh.Cv1, 3) + ",\\ \\ \\phi_v=0.90", 'AISC G2.1(b), Eqs. G2-3, G2-4');
   E("V_n=0.6F_yA_wC_{v1}=0.6\\times" + n_(I.Fy, 0) + "\\times" + n_(sh.Aw, 2) + "\\times" + n_(sh.Cv1, 3) + "=" + n_(sh.Vn, 1) + "\\ \\text{kip}", 'AISC Eq. G2-1; I4.2(a)');
-  E("\\frac{\\phi_vV_n}{b}=\\frac{" + n_(sh.phiv, 2) + "\\times" + n_(sh.Vn, 1) + "}{" + n_(bf, 3) + "}=" + n_(sh.Vc / bf, 2) + "\\ \\text{kip/ft}\\ \\ge\\ V_u=" + n_(I.Vu, 2) + ",\\quad DCR=" + n_(I.Vu / (sh.Vc / bf), 2) + okT(I.Vu <= sh.Vc / bf + 1e-9));
+  E("\\phi_vV_n=" + n_(sh.phiv, 2) + "\\times" + n_(sh.Vn, 1) + "=" + n_(sh.Vc, 1) + "\\ \\text{kip}\\ " + (I.Vu <= sh.Vc + 1e-9 ? "\\ge" : "<") + "\\ V_{u,pile}=" + n_(I.Vu, 1) + ",\\quad DCR=" + n_(I.Vu / sh.Vc, 2) + okT(I.Vu <= sh.Vc + 1e-9));
 
   H('D. Axial force and interaction');
   if (r.dem.Pu === 0) P('No axial force entered (P_u = 0); axial and interaction checks are not required.');
@@ -585,8 +611,8 @@ function calcBlocks(r) {
   }
   if (r.dem.Pu !== 0) {
     const d = r.dem;
-    E("P_r=P_u\\,b=" + n_(Math.abs(I.Pu), 2) + "\\times" + n_(bf, 3) + "=" + n_(Math.abs(d.Pu), 1) + ",\\ \\ P_c=\\phi P_n=" + n_(r.Pc, 0) + "\\ \\text{kip}\\ \\Rightarrow\\ \\frac{P_r}{P_c}=" + n_(d.pr, 3));
-    E("M_r=M_u\\,b=" + n_(d.Mu / 12, 1) + ",\\ \\ M_c=\\phi_bM_n=" + n_(fl.Mc / 12, 1) + "\\ \\text{kip-ft}\\ \\Rightarrow\\ " + (d.pr >= 0.2 ? "\\frac{P_r}{P_c}+\\frac89\\frac{M_r}{M_c}" : "\\frac{P_r}{2P_c}+\\frac{M_r}{M_c}") + "=" + n_(d.H1, 3) + "\\ " + cmpT(d.H1, 1) + "\\ 1.0" + okT(d.H1 <= 1 + 1e-9), 'AISC Eq. ' + (d.pr >= 0.2 ? 'H1-1a' : 'H1-1b') + (fl.flexComp ? '; I5' : ''));
+    E("P_r=P_{u,pile}=" + n_(Math.abs(d.Pu), 1) + ",\\ \\ P_c=\\phi P_n=" + n_(r.Pc, 0) + "\\ \\text{kip}\\ \\Rightarrow\\ \\frac{P_r}{P_c}=" + n_(d.pr, 3));
+    E("M_r=M_{u,pile}=" + n_(d.Mu / 12, 1) + ",\\ \\ M_c=\\phi_bM_n=" + n_(fl.Mc / 12, 1) + "\\ \\text{kip-ft}\\ \\Rightarrow\\ " + (d.pr >= 0.2 ? "\\frac{P_r}{P_c}+\\frac89\\frac{M_r}{M_c}" : "\\frac{P_r}{2P_c}+\\frac{M_r}{M_c}") + "=" + n_(d.H1, 3) + "\\ " + cmpT(d.H1, 1) + "\\ 1.0" + okT(d.H1 <= 1 + 1e-9), 'AISC Eq. ' + (d.pr >= 0.2 ? 'H1-1a' : 'H1-1b') + (fl.flexComp ? '; I5' : ''));
   }
 
   H('E. Structural plain concrete between reinforced piles (per ft of wall height)');
@@ -601,6 +627,13 @@ function calcBlocks(r) {
     });
   }
 
+  if (r.crack) {
+    const c = r.crack;
+    H('G. Primary pile under wall curvature (compatibility)');
+    P('The primary piles are bonded to the reinforced piles through the overlap, so they bend with the same curvature. If that curvature cracks them, they cannot add stiffness (αp must be 0). Horizontal cracks do not cut their horizontal lagging span (§E), because that span has its tension on vertical planes.');
+    E("\\kappa=\\frac{M_{s,pile}}{EI_{eff}+E_{c,p}I_g}=\\frac{" + n_(c.Msp, 0) + "}{" + n_(c.EIsec / 1e6, 2) + "\\times10^6+" + n_(c.EIpu / 1e6, 2) + "\\times10^6}=" + n_(c.kap * 1e6, 3) + "\\times10^{-6}\\ \\text{in}^{-1}");
+    E("f_t=E_{c,p}\\,\\kappa\\,\\tfrac D2=" + n_(c.ft, 3) + "\\ \\text{ksi}\\ " + (c.cracks ? ">" : "\\le") + "\\ f_r=7.5\\lambda\\sqrt{f'_{c,p}}=" + n_(c.fr, 3) + "\\ \\text{ksi}\\ \\Rightarrow\\ \\text{" + (c.cracks ? 'primary piles crack: use }\\alpha_p=0' : 'uncracked: }\\alpha_p\\le1\\text{ admissible') + "}", 'ACI 318-19 19.2.3.1');
+  }
   H('F. Effective flexural stiffness per ft of wall');
   E("EI_{s}=E_sI_s=" + n_(I.Es, 0) + "\\times" + n_(s.Ix, 0) + "=" + n_(r.stiff[0].EIsec / 1e6, 2) + "\\times10^6\\ \\text{kip-in}^2");
   E("EI_{eff}=E_sI_s+C_1E_cI_c,\\ \\ C_1=0.25+3\\frac{A_s}{A_g}=" + n_(r.C1, 3) + "\\ \\Rightarrow\\ EI_{eff}=" + n_(r.stiff[1].EIsec / 1e6, 2) + "\\times10^6\\ \\text{kip-in}^2", 'AISC Eqs. I2-6, I2-7');
@@ -612,7 +645,8 @@ function calcBlocks(r) {
   return B;
 }
 const ASSUME = r => [
-  'Steel ' + (r.s.type === 'HP' ? 'HP' : r.s.type === 'W' ? 'W' : 'custom') + ' shape centred in each reinforced pile, web perpendicular to the wall, bending about the strong axis. Demands are factored (ASCE 7-22 §2.3 / AASHTO) per ft of wall and converted per reinforced pile with b = ' + f1(r.g.b, 1) + ' in (FHWA 8.12.4).',
+  'Demand transfer: the wall analysis is plane strain (per ft). Reinforced piles take the vertical bending and shear of their full tributary width b (Mu,pile = Mu x b, Vu,pile = Vu x b). Primary piles are given no vertical strength; they span horizontally between reinforced piles under the factored net pressure wu, and their cracking under wall curvature decides whether they may add stiffness.',
+  'Steel ' + (r.s.type === 'HP' ? 'HP' : r.s.type === 'W' ? 'W' : 'custom') + ' shape centred in each reinforced pile, web perpendicular to the wall, bending about the strong axis. Demands are factored (ASCE 7-22 §2.3 / AASHTO) and entered per reinforced pile, i.e. the wall-designer per-ft result × b = ' + f1(r.g.b, 1) + ' in (FHWA 8.12.4).',
   'Flexure: ' + (r.fl.flexComp ? 'plastic stress distribution on the composite section (AISC I3.3c); requires steel anchors and I2.1a detailing.' : 'plastic moment of the steel section alone (AISC I3.3b); the concrete is not relied on for flexure, so no anchors are needed.') + ' L_b = 0 (continuously braced by concrete).',
   'Shear is taken by the steel web alone (AISC I4.2a). Axial: ' + (r.fl.flexComp ? 'encased composite (I2.1b)' : 'steel alone (E3, E7)') + ' with L_c = ' + f1(r.I.Lc, 1) + ' ft; interaction by AISC H1.1' + (r.fl.flexComp ? ' (permitted by I5)' : '') + '.',
   'Concrete between reinforced piles is structural plain concrete (ACI 318-19 Ch. 14) spanning horizontally between steel flange tips under the factored lateral pressure w_u; φ = 0.60.',
@@ -705,16 +739,18 @@ async function buildPDF(res, jsPDF, tex2svg) {
     ['Pile diameter D', f1(I.D, 2), 'in'], ['Pile spacing s', f1(I.s, 2), 'in'], ['Reinforced piles', I.pat === 'alt' ? 'alternate' : 'all', '-'],
     ['Cover to steel (clear)', f1(I.cover, 2), 'in'], ["f'c secondary / primary", f1(I.fc, 2) + ' / ' + f1(I.fcp, 2), 'ksi'], ['Concrete unit weight wc', f1(I.wc, 0), 'pcf'],
     ['Steel Fy / Es', f1(I.Fy, 0) + ' / ' + f1(I.Es, 0), 'ksi'], ['Lightweight factor lambda', f1(I.lam, 2), '-']], [
-    ['Mu (factored moment)', f1(I.Mu, 2), 'kip-ft/ft'], ['Vu (factored shear)', f1(I.Vu, 2), 'kip/ft'], ['Pu (+ compression)', f1(I.Pu, 2), 'kip/ft'],
-    ['wu (factored lateral pressure)', f1(I.wu, 0), 'psf'], ['Effective length Lc', f1(I.Lc, 2), 'ft'], ['Primary stiffness factor ap', f1(I.ap, 2), '-'],
+    ['Mu per reinforced pile', f1(I.Mu, 1), 'kip-ft'], ['Vu per reinforced pile', f1(I.Vu, 1), 'kip'], ['Pu per pile (+ comp.)', f1(I.Pu, 1), 'kip'],
+    ['Ms per reinforced pile', f1(I.Ms, 1), 'kip-ft'], ['wu (factored net pressure)', f1(I.wu, 0), 'psf'], ['Effective length Lc', f1(I.Lc, 2), 'ft'], ['Primary stiffness factor ap', f1(I.ap, 2), '-'],
     ['Flexure model', I.method === 'comp' ? 'composite I3.3c' : 'steel alone I3.3b', '-'], ['Cast against soil (-2 in)', I.soil ? 'yes' : 'no', '-']]), [44, 22, 14, 46, 26, 16], { fs: 7.8, align: ['left', 'right', 'left', 'left', 'right', 'left'] });
   await T(['Steel shape ' + s.name + (s.db ? ' (AISC v16.0)' : ' (user)'), 'Value', 'Unit', 'Property', 'Value', 'Unit'], u2([
     ['Area A', f1(s.A, 2), 'in^2'], ['Depth d', f1(s.d, 2), 'in'], ['Flange width bf', f1(s.bf, 2), 'in'], ['Flange thickness tf', f1(s.tf, 3), 'in'], ['Web thickness tw', f1(s.tw, 3), 'in']], [
     ['Ix', f1(s.Ix, 0), 'in^4'], ['Sx / Zx', f1(s.Sx, 1) + ' / ' + f1(s.Zx, 1), 'in^3'], ['ry', f1(s.ry, 2), 'in'], ['h/tw', f1(s.h_tw, 1), '-'], ['bf/2tf', f1(s.bf_2tf, 2), '-']]), [44, 22, 14, 46, 26, 16], { fs: 7.8, align: ['left', 'right', 'left', 'left', 'right', 'left'] });
 
-  H1('2  Demand / capacity summary (per ft of wall)');
-  await T(['Check', 'Demand', 'Capacity', 'Unit', 'DCR', 'Status', 'Reference'], r.ck.map(c => ({ cells: [c.n, fmtV(c.dem, c.u === '-' ? 3 : 2), fmtV(c.cap, c.u === '-' ? 3 : 2), c.u, c.dcr.toFixed(2), c.ok ? 'OK' : 'NG', c.ref], _col: [null, null, null, MUT, c.ok ? OK : NG, c.ok ? OK : NG, MUT] })),
-    [54, 16, 16, 16, 11, 11, 56], { fs: 7.4, wrap: [true, false, false, false, false, false, true], align: ['left', 'right', 'right', 'left', 'right', 'left', 'left'] });
+  if (r.link) P('Demands source: wall designer file for ' + (r.link.src.proj || '') + ' / ' + (r.link.src.wall || '') + ' (' + String(r.link.src.created).slice(0, 16).replace('T', ' ') + ' UTC). ' + (r.link.diffs.length ? 'Inputs edited after linking: ' + r.link.diffs.join('; ') + '.' : 'All linked values unchanged.'), { size: 7.8, c: r.link.diffs.length ? NG : MUT });
+  else P('Demands source: entered manually (not linked to the wall designer).', { size: 7.8, c: MUT });
+  H1('2  Demand / capacity summary');
+  await T(['Check', 'Demand', 'Capacity', 'Unit', 'Per ft wall: dem. / cap.', 'DCR', 'Status', 'Reference'], r.ck.map(c => ({ cells: [c.n, fmtV(c.dem, c.u === '-' ? 3 : 2), fmtV(c.cap, c.u === '-' ? 3 : 2), c.u, c.pu ? fmtV(c.pdem, 1) + ' / ' + fmtV(c.pcap, 1) + ' ' + c.pu : '-', c.dcr.toFixed(2), c.info ? 'INFO' : c.ok ? 'OK' : 'NG', c.ref], _col: [null, null, null, MUT, null, c.info ? MUT : c.ok ? OK : NG, c.info ? MUT : c.ok ? OK : NG, MUT] })),
+    [46, 13, 13, 17, 26, 9, 9, 47], { fs: 7.0, wrap: [true, false, false, true, true, false, false, true], align: ['left', 'right', 'right', 'left', 'right', 'right', 'left', 'left'] });
   await T(['Design capacity', 'Per pile', 'Per ft of wall', 'Unit (pile / ft)'], capRows(r), [74, 30, 30, 46], { fs: 8, align: ['left', 'right', 'right', 'left'] });
   if (r.warnings.length) { H2('Notes'); r.warnings.forEach(w => P('- ' + w, { size: 8, c: NG, gap: 0.4 })); }
 
@@ -761,10 +797,11 @@ const SCHEMA = [
   { id: 'Fy', l: 'Steel yield stress Fy', u: 'ksi', v: 50 }, { id: 'Es', l: 'Steel modulus Es', u: 'ksi', v: 29000 },
   { id: 'fc', l: "Concrete f′c, secondary (reinforced) piles", u: 'ksi', v: 5 }, { id: 'fcp', l: "Concrete f′c, primary piles", u: 'ksi', v: 4 },
   { id: 'wc', l: 'Concrete unit weight wc', u: 'pcf', v: 145 }, { id: 'lam', l: 'Lightweight factor λ', u: '–', v: 1.0 }] },
- { g: 'Factored demands (per ft of wall)', open: true, f: [
-  { id: 'Mu', l: 'Factored moment Mu', u: 'kip-ft/ft', v: 177.6 }, { id: 'Vu', l: 'Factored shear Vu', u: 'kip/ft', v: 31.2 },
-  { id: 'Pu', l: 'Factored axial Pu (+ compression, − tension)', u: 'kip/ft', v: 5 },
-  { id: 'wu', l: 'Max factored lateral pressure wu (for plain-concrete span)', u: 'psf', v: 3000 }] },
+ { g: 'Factored demands per reinforced pile (= per ft × b)', open: true, f: [
+  { id: 'Mu', l: 'Factored moment Mu per reinforced pile', u: 'kip-ft', v: 888.0 }, { id: 'Vu', l: 'Factored shear Vu per reinforced pile', u: 'kip', v: 149.3 },
+  { id: 'Pu', l: 'Factored axial Pu per reinforced pile (+ compression, − tension)', u: 'kip', v: 25 },
+  { id: 'Ms', l: 'Service moment Ms per reinforced pile (primary-pile cracking)', u: 'kip-ft', v: 587.8 },
+  { id: 'wu', l: 'Max factored net lateral pressure wu (primary-pile span)', u: 'psf', v: 3000 }] },
  { g: 'Design options', open: true, f: [
   { id: 'method', l: 'Flexure / axial model', t: 'sel', o: [['steel', 'Steel section alone (AISC I3.3b, E3/E7)'], ['comp', 'Composite (AISC I3.3c, I2.1b) — needs anchors']], v: 'steel' },
   { id: 'Lc', l: 'Effective length for axial buckling Lc (0 = braced by concrete/soil)', u: 'ft', v: 0 },
@@ -792,7 +829,26 @@ function renderInputs() {
   $('#src').addEventListener('change', () => { const t = $('#src').value; if (t !== 'custom') { const cur = $('#shape').value, keep = SHAPE_BY.get(cur) && SHAPE_BY.get(cur).type === t; $('#shape').innerHTML = shapeOptions(t, keep ? cur : (t === 'HP' ? 'HP14X117' : 'W24X104')); } });
   $('#inputs').addEventListener('input', schedule); $('#inputs').addEventListener('change', schedule);
 }
-function gather() { const I = {}; for (const g of SCHEMA) for (const f of g.f) { const el = $('#' + f.id); I[f.id] = f.t === 'chk' ? el.checked : f.t ? el.value : parseFloat(el.value); } return I; }
+let LINK = null;
+function gather() { const I = {}; for (const g of SCHEMA) for (const f of g.f) { const el = $('#' + f.id); I[f.id] = f.t === 'chk' ? el.checked : f.t ? el.value : parseFloat(el.value); } I.link = LINK; return I; }
+function applyLink(d) {
+  if (!d || d.source !== 'secant_pile_wall_designer' || !d.geometry || !d.perFt) throw new Error('not a wall-designer demands file');
+  LINK = d; const G = d.geometry, P = d.perFt, set = (id, v) => { $('#' + id).value = +(+v).toFixed(4); };
+  set('D', G.D); set('s', G.s); $('#pat').value = G.pat; set('fc', G.fc); const PP = d.perPile; set('Mu', PP.Mu); set('Vu', PP.Vu); set('Ms', PP.M); set('wu', P.wu);
+  if (d.proj) $('#proj').value = d.proj; if (d.wall) $('#wall').value = d.wall;
+  try { localStorage.setItem('spsd-link', JSON.stringify(d)); } catch (e) { }
+  renderLinkBar(); schedule();
+}
+function renderLinkBar() {
+  const el = $('#linkbar'); let pend = null; try { pend = JSON.parse(localStorage.getItem('spw-struct-demands') || 'null'); } catch (e) { }
+  if (LINK) el.innerHTML = `<p class="note" style="border-left:3px solid var(--ok);padding:6px 10px;background:var(--panel)">Demands linked from wall designer: ${esc(LINK.proj || '')} / ${esc(LINK.wall || '')}, ${esc(String(LINK.created).slice(0, 16).replace('T', ' '))} UTC. per reinforced pile (b = ${(+LINK.geometry.b_ft).toFixed(2)} ft): Mu ${(+LINK.perPile.Mu).toFixed(1)} kip-ft at EL ${(+LINK.perFt.zMu).toFixed(1)}, Vu ${(+LINK.perPile.Vu).toFixed(1)} kip, wu ${(+LINK.perFt.wu).toFixed(0)} psf. <button class="btn2" id="unl" type="button">Unlink</button></p>`;
+  else if (pend) el.innerHTML = `<p class="note" style="border-left:3px solid var(--warn);padding:6px 10px;background:var(--panel)">Wall-designer results found in this browser (${esc(pend.wall || '')}, ${esc(String(pend.created).slice(0, 16).replace('T', ' '))} UTC). <button class="btn2" id="usel" type="button">Use these demands</button></p>`;
+  else el.innerHTML = '';
+  const u = $('#unl'); if (u) u.onclick = () => { LINK = null; try { localStorage.removeItem('spsd-link'); } catch (e) { } renderLinkBar(); schedule(); };
+  const us = $('#usel'); if (us) us.onclick = () => applyLink(pend);
+}
+$('#lnk').addEventListener('click', () => $('#lnkf').click());
+$('#lnkf').addEventListener('change', e => { const f = e.target.files[0]; if (!f) return; const rd = new FileReader(); rd.onload = () => { try { applyLink(JSON.parse(rd.result)); $('#dlnote').textContent = 'Linked ' + f.name + '.'; } catch (err) { $('#dlnote').textContent = 'That file is not a wall-designer demands file.'; } }; rd.readAsText(f); e.target.value = ''; });
 function applyInputs(I) {
   if (I.src && I.src !== 'custom') { $('#src').value = I.src; $('#shape').innerHTML = shapeOptions(I.src, I.shape); }
   for (const g of SCHEMA) for (const f of g.f) if (I[f.id] !== undefined && f.id !== 'shape') { const el = $('#' + f.id); if (f.t === 'chk') el.checked = !!I[f.id]; else el.value = I[f.id]; }
@@ -801,10 +857,10 @@ function applyInputs(I) {
 function syncDeps(I) { document.querySelectorAll('[data-dep]').forEach(r => { const d = JSON.parse(r.dataset.dep); r.hidden = !d.slice(1).includes(I[d[0]]); }); const si = $('#shapeInfo'); if (si) { si.hidden = I.src === 'custom'; const s = SHAPE_BY.get(I.shape); si.textContent = s ? `A ${s.A} in², d ${s.d} in, bf ${s.bf} in, tf ${s.tf} in, tw ${s.tw} in, Ix ${s.Ix} in⁴, Zx ${s.Zx} in³, ${s.W} lb/ft` : ''; } }
 let timer = null, RES = null, TAB = 'sec', dirty = { der: true };
 function schedule() { clearTimeout(timer); $('#main').classList.add('busy'); timer = setTimeout(run, 200); }
-const pill = s => `<span class="pill ${s}">${s === 'ok' ? 'OK' : 'NG'}</span>`;
+const pill = s => `<span class="pill ${s}">${s === 'ok' ? 'OK' : s === 'na' ? 'INFO' : 'NG'}</span>`;
 function run() {
   const I = gather(); syncDeps(I); $('#main').classList.remove('busy');
-  try { localStorage.setItem('spsd-inputs-v1', JSON.stringify(I)); } catch (e) { }
+  try { const J = Object.assign({}, I); delete J.link; localStorage.setItem('spsd-inputs-v2', JSON.stringify(J)); } catch (e) { }
   const bad = []; for (const g of SCHEMA) for (const f of g.f) if (!f.t && !isFinite(I[f.id]) && !(f.dep && !f.dep.slice(1).includes(I[f.dep[0]]))) bad.push(f.l);
   const msgs = $('#msgs');
   if (bad.length) { RES = null; msgs.innerHTML = `<li>Enter a number for: ${bad.map(esc).join(', ')}.</li>`; $('#dl').disabled = true; return; }
@@ -815,15 +871,15 @@ function run() {
   renderSummary(r); renderSec(r); renderStf(r); renderTab(TAB);
 }
 function renderSummary(r) {
-  const mx = Math.max(...r.ck.map(c => c.dcr)), b = r.g.bft;
+  const mx = Math.max(...r.ck.filter(c => !c.info).map(c => c.dcr)), b = r.g.bft;
   $('#summary').innerHTML = `<div class="big">
    <div><b>${esc(r.s.name)}</b><span>${r.s.db ? 'AISC v16.0' : 'user-defined'} · ${f1(r.s.W, 0)} lb/ft</span></div>
    <div><b>${f1(r.fl.Mc / 12 / b, 1)}</b><span>φMn, kip-ft/ft of wall</span></div>
    <div><b>${f1(r.sh.Vc / b, 1)}</b><span>φVn, kip/ft of wall</span></div>
    <div><b style="color:var(--${mx <= 1 ? 'ok' : 'ng'})">${mx.toFixed(2)}</b><span>Max DCR</span></div></div>
-  <div class="scroll"><table class="t"><tr><th>Check (per ft of wall)</th><th>Demand</th><th>Capacity</th><th class="l">Unit</th><th>DCR</th><th class="l">Reference</th></tr>
-  ${r.ck.map(c => `<tr><td>${esc(c.n)}</td><td>${fmtV(c.dem, c.u === '-' ? 3 : 2)}</td><td>${fmtV(c.cap, c.u === '-' ? 3 : 2)}</td><td class="l">${c.u === '-' ? '–' : esc(c.u)}</td><td><b>${c.dcr.toFixed(2)}</b> ${pill(c.ok ? 'ok' : 'ng')}</td><td class="ref">${esc(c.ref)}</td></tr>`).join('')}</table></div>
-  <p class="note">Per-pile values = per-ft values × b = ${f1(b, 3)} ft (tributary wall width per reinforced pile). DCR = demand / design capacity.</p>`;
+  <div class="scroll"><table class="t"><tr><th>Check</th><th>Demand</th><th>Capacity</th><th class="l">Unit</th><th>Per ft of wall (÷ b)</th><th>DCR</th><th class="l">Reference</th></tr>
+  ${r.ck.map(c => `<tr><td>${esc(c.n)}</td><td>${fmtV(c.dem, c.u === '-' ? 3 : 2)}</td><td>${fmtV(c.cap, c.u === '-' ? 3 : 2)}</td><td class="l">${c.u === '-' ? '–' : esc(c.u)}</td><td>${c.pu ? fmtV(c.pdem, 1) + ' / ' + fmtV(c.pcap, 1) + ' ' + c.pu : '—'}</td><td><b>${c.dcr.toFixed(2)}</b> ${pill(c.info ? 'na' : c.ok ? 'ok' : 'ng')}</td><td class="ref">${esc(c.ref)}</td></tr>`).join('')}</table></div>
+  <p class="note">INFO rows are compatibility checks with no strength requirement: a primary pile that cracks is acceptable when αp = 0 (NG if αp > 0). Reinforced-pile checks use per-pile demands (wall-designer per-ft result × b, b = ${f1(b, 3)} ft); per-ft equivalents shown for reference. Primary/plain rows are per ft of wall height. DCR = demand / design capacity.</p>`;
 }
 function renderSec(r) { $('#tab-sec').innerHTML = `<div class="card">${planFig(r).svg()}</div><div class="card" style="margin-top:12px">${sectionFig(r).svg()}</div>
   <h3>Design capacities</h3>${tbl(['Capacity', 'Per pile', 'Per ft of wall', 'Unit'], capRows(r).map(x => x.map(esc)))}`; }
@@ -866,7 +922,9 @@ $('#exp').addEventListener('click', () => { const I = gather(), name = ((I.wall 
 $('#imp').addEventListener('click', () => $('#impf').click());
 $('#impf').addEventListener('change', e => { const f = e.target.files[0]; if (!f) return; const rd = new FileReader(); rd.onload = () => { try { applyInputs(JSON.parse(rd.result)); schedule(); $('#dlnote').textContent = 'Loaded ' + f.name + '.'; } catch (err) { $('#dlnote').textContent = 'That file is not a valid inputs file.'; } }; rd.readAsText(f); e.target.value = ''; });
 renderInputs(); renderRefs();
-try { const q = localStorage.getItem('spsd-inputs-v1'); if (q) applyInputs(JSON.parse(q)); } catch (e) { }
+try { const q = localStorage.getItem('spsd-inputs-v2'); if (q) applyInputs(JSON.parse(q)); } catch (e) { }
+try { const q = localStorage.getItem('spsd-link'); if (q) LINK = JSON.parse(q); } catch (e) { }
+renderLinkBar();
 run();
 
 </script>

@@ -114,6 +114,7 @@ ol.refs{padding-left:22px;max-width:92ch}ol.refs li{margin:6px 0}
   <button class="btn2" id="exp" type="button">Save inputs</button>
   <button class="btn2" id="imp" type="button">Load inputs</button>
   <input type="file" id="impf" accept=".json,application/json" hidden>
+  <button class="btn2" id="sdx" type="button" title="Exact factored demands for secant_pile_structural_designer.html">Export structural demands</button>
   <button class="btn" id="dl" type="button">Download PDF report</button>
   <span class="dlnote" id="dlnote" role="status"></span>
  </div>
@@ -566,8 +567,12 @@ function design(I) {
   const L_m = (I.top - toe) * 0.3048, E_MPa = Ec * 0.00689476, I_m4pm = Ie * 4.162314e-7 / (b_ft * 0.3048);
   const rho = 10.91e-7 * L_m ** 4 / (E_MPa * I_m4pm);
 
+  // --- primary (unreinforced) pile demand: factored net lateral pressure it spans horizontally between reinforced piles
+  let pw = { wu: 0, z: I.top, ws: 0 };
+  prof.forEach(p => { if (Math.abs(p.netF) > pw.wu) pw = { wu: Math.abs(p.netF), z: p.z, ws: Math.abs(p.net) }; });
+
   return {
-    I, M, errors: [], warnings, mode, rot, prov, Dot, Dsl, Dreq, Dd, toe, len: I.top - toe, FSsl: sl.FS, sl, g1A, g1B,
+    I, M, errors: [], warnings, mode, pw, rot, prov, Dot, Dsl, Dreq, Dd, toe, len: I.top - toe, FSsl: sl.FS, sl, g1A, g1B,
     Rs, svc, fac, S, F: Fd, prof, ot, bld, slab: M.slab, compTab, hinge, coef, rows, basal, hyd, LF: M.LF, aep: M.aep,
     geom: { r_in, ov, t_in, b_ft, Ec, Ig, Ie, rho, logrho: Math.log10(rho) },
     per: { M: S.Mmax * b_ft / 1000, V: Math.abs(S.Vmax) * b_ft / 1000, Mu: Fd.Mmax * b_ft / 1000, Vu: Math.abs(Fd.Vmax) * b_ft / 1000, R: svc.R / 1000, Ru: fac.R / 1000 }
@@ -962,6 +967,8 @@ function calcBlocks(res) {
   E("M_{max}=" + K(res.S.Mmax) + "\\ \\text{kip-ft/ft},\\ V_{max}=" + K(Math.abs(res.S.Vmax)) + "\\ \\text{kip/ft (service)};\\quad p_{n,u}=\\gamma_{EH}p_{EH}+\\gamma_{ES}\\Delta p_q+\\gamma_{EB}\\Delta p_h+\\gamma_{WA}p_{WA}", 'FHWA §8.12.4.2');
   E("M_u=" + K(res.F.Mmax) + "\\times" + n_(res.geom.b_ft, 2) + "=" + n_(res.per.Mu, 1) + "\\ \\text{kip-ft},\\quad V_u=" + K(Math.abs(res.F.Vmax)) + "\\times" + n_(res.geom.b_ft, 2) + "=" + n_(res.per.Vu, 1) + "\\ \\text{kip (per reinforced pile)},\\quad R_u=" + n_(res.per.Ru, 2) + "\\ \\text{kip/ft}");
   P(f.note + '. Mobilised passive is rebalanced (λ_u) for the factored loads.');
+  P('Why per reinforced pile, not per ft: the free-earth analysis is a plane-strain model, so M and V come out per ft of wall. The real wall is not uniform. Only the reinforced piles (one every b = ' + f1(res.geom.b_ft, 3) + ' ft) have steel. The unreinforced primary piles are plain concrete and cannot carry vertical bending tension. So the vertical bending from the whole width b is collected by one reinforced pile: M_pile = M_ft x b, V_pile = V_ft x b (FHWA 8.12.4.2). The primary piles carry a different demand: the lateral pressure on their face spans horizontally to the reinforced piles on each side.');
+  E("w_{u}=\\max_z\\big|p_{n,u}(z)\\big|=" + n_(res.pw.wu, 0) + "\\ \\text{psf at EL }" + n_(res.pw.z, 2) + "\\ \\ (\\text{service }" + n_(res.pw.ws, 0) + "\\ \\text{psf})\\ \\Rightarrow\\ \\text{horizontal span demand on primary piles}", 'Structural designer, Sec. E');
   E("\\rho=10.91\\times10^{-7}\\frac{(H+D)^4}{EI}=" + (res.geom.rho < 0.001 ? res.geom.rho.toExponential(2).replace(/e([-+]\d+)/, '\\times10^{$1}') : n_(res.geom.rho, 4)) + ",\\quad \\log\\rho=" + n_(res.geom.logrho, 2), 'FHWA Fig. 8-60a');
 
   if (res.basal.applicable) {
@@ -1126,7 +1133,8 @@ async function buildPDF(res, jsPDF, tex2svg) {
     ['Slab reaction R', f1(res.svc.R / 1000, 2), f1(res.fac.R / 1000, 2), 'kip/ft'],
     ['Max moment per ft (at EL ' + f1(res.S.Mpos >= -res.S.Mneg ? res.S.zMp : res.S.zMn, 2) + ')', f1(res.S.Mmax / 1000, 1), f1(res.F.Mmax / 1000, 1), 'kip-ft/ft'],
     ['Max shear per ft', f1(Math.abs(res.S.Vmax) / 1000, 2), f1(Math.abs(res.F.Vmax) / 1000, 2), 'kip/ft'],
-    { cells: ['Per reinforced pile, b = ' + f1(res.geom.b_ft, 2) + ' ft: M / V', f1(res.per.M, 1) + ' / ' + f1(res.per.V, 1), f1(res.per.Mu, 1) + ' / ' + f1(res.per.Vu, 1), 'kip-ft / kip'], _bold: 1 },
+    { cells: ['Per reinforced pile (x b = ' + f1(res.geom.b_ft, 2) + ' ft): M / V', f1(res.per.M, 1) + ' / ' + f1(res.per.V, 1), f1(res.per.Mu, 1) + ' / ' + f1(res.per.Vu, 1), 'kip-ft / kip'], _bold: 1 },
+    ['Primary (unreinforced) pile: max net lateral pressure w (EL ' + f1(res.pw.z, 2) + ')', f1(res.pw.ws, 0), f1(res.pw.wu, 0), 'psf'],
     ['Rowe flexibility log rho', f1(res.geom.logrho, 2), '-', '-']], [88, 34, 34, 24], { fs: 8, align: ['left', 'right', 'right', 'left'] });
   if (res.hinge) P(`FHWA hinge method (Fig. 8-70), service: T = ${f1(res.hinge.T / 1000, 2)} kip/ft, subgrade reaction ${f1(res.hinge.R / 1000, 2)} kip/ft; tributary T = ${f1(res.hinge.Tt / 1000, 2)} kip/ft (free-earth R = ${f1(res.svc.R / 1000, 2)} kip/ft).`, { size: 7.8, c: MUT });
   if (res.warnings.length) { H2('Notes'); res.warnings.forEach(w => P('- ' + w, { size: 8, c: NG, gap: 0.4 })); }
@@ -1307,7 +1315,8 @@ function run() {
  try { res = design(I); } catch (e) { RES = null; msgs.innerHTML = `<li>Calculation stopped: ${esc(e.message)}. Check the inputs.</li>`; $('#dl').disabled = true; return; }
  msgs.innerHTML = (res.errors || []).map(e => `<li>${esc(e)}</li>`).join('') + (res.warnings || []).map(w => `<li class="w">${esc(w)}</li>`).join('');
  if (res.errors && res.errors.length) { RES = null; $('#dl').disabled = true; $('#summary').innerHTML = ''; ['sec', 'der', 'calc', 'plan'].forEach(t => $('#tab-' + t).innerHTML = ''); return; }
- RES = res; $('#dl').disabled = false; dirty = { der: true, calc: true, plan: true };
+ RES = res; $('#dl').disabled = false;
+ try { localStorage.setItem('spw-struct-demands', JSON.stringify(structDemands(res))); } catch (e) { } dirty = { der: true, calc: true, plan: true };
  renderSummary(res); renderSection(res); renderTab(TAB);
 }
 function renderSummary(r) {
@@ -1328,6 +1337,7 @@ function renderSummary(r) {
    <tr><td>Slab reaction, kip/ft</td><td>${f1(r.svc.R / 1000, 2)}</td><td>${f1(r.fac.R / 1000, 2)}</td></tr>
    <tr><td>Max moment, kip-ft/ft</td><td>${f1(S.Mmax / 1000, 1)}</td><td>${f1(F.Mmax / 1000, 1)}</td></tr>
    <tr><td>Max shear, kip/ft</td><td>${f1(Math.abs(S.Vmax) / 1000, 2)}</td><td>${f1(Math.abs(F.Vmax) / 1000, 2)}</td></tr>
+   <tr><td>Primary pile: max net lateral pressure, psf (EL ${f1(r.pw.z, 1)})</td><td>${f1(r.pw.ws, 0)}</td><td>${f1(r.pw.wu, 0)}</td></tr>
    <tr class="g"><td>Per reinforced pile, b = ${f1(r.geom.b_ft, 2)} ft</td><td>M ${f1(r.per.M, 0)} · V ${f1(r.per.V, 0)}</td><td>Mu ${f1(r.per.Mu, 0)} · Vu ${f1(r.per.Vu, 0)}</td></tr>
    <tr><td>Governing mechanism</td><td colspan="2">${r.mode === 'A' ? 'A — toe toward excavation' : 'B — toe into retained soil'}</td></tr>
    ${r.hinge ? `<tr><td>FHWA hinge / tributary brace load</td><td colspan="2">${f1(r.hinge.T / 1000, 2)} / ${f1(r.hinge.Tt / 1000, 2)} k/ft</td></tr>` : ''}
@@ -1445,6 +1455,20 @@ $('#dl').addEventListener('click', async () => {
  } catch (e) { note.textContent = 'Report failed: ' + e.message; }
  btn.disabled = false;
 });
+/* ---- exact demands for the structural designer (same D, s, pattern, f'c, b) ---- */
+function structDemands(r) {
+  const I = r.I, zM = r.F.Mpos >= -r.F.Mneg ? r.F.zMp : r.F.zMn, step = Math.max(1, Math.floor(r.prof.length / 400));
+  return {
+    source: 'secant_pile_wall_designer', version: 1, created: new Date().toISOString(), proj: I.proj, wall: I.wall,
+    geometry: { D: I.dia, s: I.sp, pat: I.pat, fc: I.fc, b_ft: r.geom.b_ft, top: I.top, toe: r.toe, ze: I.ze, zb: I.zb },
+    loadBasis: r.LF.note,
+    perFt: { Mu: r.F.Mmax / 1000, zMu: zM, Vu: Math.abs(r.F.Vmax) / 1000, zVu: r.F.zV, Ms: r.S.Mmax / 1000, Vs: Math.abs(r.S.Vmax) / 1000, Ru: r.fac.R / 1000, wu: r.pw.wu, zwu: r.pw.z, ws: r.pw.ws },
+    perPile: { Mu: r.per.Mu, Vu: r.per.Vu, M: r.per.M, V: r.per.V },
+    profile: r.prof.filter((p, i) => i % step === 0).map(p => [+p.z.toFixed(3), +p.netF.toFixed(1), +p.net.toFixed(1)]),
+    vm: r.F.pts.filter((p, i) => i % 6 === 0).map(p => [+p.z.toFixed(3), +(p.V / 1000).toFixed(3), +(p.M / 1000).toFixed(3)])
+  };
+}
+$('#sdx').addEventListener('click', () => { if (!RES) return; const d = structDemands(RES), name = ((RES.I.wall || 'secant-wall') + '_structural_demands.json').replace(/[^\w.-]+/g, '_'), txt = JSON.stringify(d); saveFile(name, txt, () => { const a = document.createElement('a'); a.href = 'data:application/json,' + encodeURIComponent(txt); a.download = name; a.click(); }); });
 $('#exp').addEventListener('click', () => { const I = gather(); const name = ((I.wall || 'secant-wall') + '_inputs.json').replace(/[^\w.-]+/g, '_'); const txt = JSON.stringify(I, null, 1); saveFile(name, txt, () => { const a = document.createElement('a'); a.href = 'data:application/json,' + encodeURIComponent(txt); a.download = name; a.click(); }); });
 $('#imp').addEventListener('click', () => $('#impf').click());
 $('#impf').addEventListener('change', e => { const f = e.target.files[0]; if (!f) return; const rd = new FileReader(); rd.onload = () => { try { applyInputs(JSON.parse(rd.result)); schedule(); $('#dlnote').textContent = 'Loaded ' + f.name + '.'; } catch (err) { $('#dlnote').textContent = 'That file is not a valid inputs file.'; } }; rd.readAsText(f); e.target.value = ''; });
