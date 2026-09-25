@@ -295,8 +295,9 @@ function design(I) {
   let crack = null;
   if (nb === 2 && I.Ms > 0) {
     const Msp = I.Ms * 12, EIsec = E * s.Ix + Math.min(0.7, 0.25 + 3 * As / Ag) * Ec * Ic, EIpu = Ecp * Ig;
-    const kap = Msp / (EIsec + EIpu), ft = Ecp * kap * R, fr = 7.5 * I.lam * Math.sqrt(fcp * 1000) / 1000;
-    crack = { Msp, EIsec, EIpu, kap, ft, fr, cracks: ft > fr };
+    const apU = I.ap > 0 ? I.ap : 1, EItot = EIsec + apU * EIpu; // stiffness the primary pile would carry if credited (αp = 1 when αp = 0 is entered, for information)
+    const kap = Msp / EItot, ft = Ecp * kap * R, fr = 7.5 * I.lam * Math.sqrt(fcp * 1000) / 1000, Mcr = fr / (Ecp * R) * EItot;
+    crack = { Msp, EIsec, EIpu, apU, EItot, kap, ft, fr, Mcr, cracks: ft > fr, required: I.ap > 0 };
   }
 
   // ---- checks (per ft of wall)
@@ -309,10 +310,13 @@ function design(I) {
     ck.push({ n: 'Combined axial + flexure (' + (pr >= 0.2 ? 'H1-1a' : 'H1-1b') + ')', dem: H1, cap: 1, u: '-', ref: 'AISC 360-22 ' + (flexComp ? 'I5, ' : '') + 'H1.1', dcr: H1 });
   }
   plain.forEach(p => push('Primary/plain: ' + p.n.replace('Plain concrete ', ''), p.dem, p.cap, p.u + ' (height)', 'ACI 318-19 ' + (p.Mn != null ? '14.5.2.1(a)' : 'Table 14.5.5.1') + ', 21.2.1', { plain: p }));
-  if (crack) ck.push({ n: 'Primary pile vertical cracking vs αp = ' + I.ap + (crack.cracks ? ' (cracks: αp must be 0)' : ' (uncracked)'), dem: crack.ft, cap: crack.fr, u: 'ksi', ref: 'ACI 318-19 19.2.3.1; compatibility', dcr: crack.ft / crack.fr, info: !(I.ap > 0) });
+  if (crack) ck.push(crack.required
+    ? { n: 'Primary pile uncracked under Ms, required because αp = ' + I.ap + ' > 0', dem: crack.Msp / 12, cap: crack.Mcr / 12, u: 'kip-ft', ref: 'ACI 318-19 19.2.3.1; strain compatibility', dcr: crack.ft / crack.fr }
+    : { n: 'Primary pile cracking check: not required (αp = 0, primary stiffness not credited)', dem: crack.Msp / 12, cap: crack.Mcr / 12, u: 'kip-ft', ref: 'Needed only if αp > 0', dcr: NaN, info: true });
   ck.push({ n: 'Steel shape fits in pile with cover', dem: diag, cap: avail, u: 'in', ref: 'Geometry', dcr: diag / avail });
   if (flexComp) ck.push({ n: 'Minimum steel ratio As/Ag ≥ 1%', dem: 0.01, cap: rho, u: '-', ref: 'AISC 360-22 I2.1a(b)', dcr: 0.01 / rho });
   ck.forEach(c => c.ok = c.info || c.dcr <= 1 + 1e-9);
+  if (crack && crack.required && crack.cracks) warnings.push(`αp = ${I.ap} is not admissible: under Ms = ${(crack.Msp / 12).toFixed(0)} kip-ft per pile the primary piles crack (cracking moment ${(crack.Mcr / 12).toFixed(0)} kip-ft). Set αp = 0.`);
   if (flexComp) warnings.push('Composite flexure (AISC I3.3c) requires steel anchors on the shape and encased-member detailing (I2.1a: continuous longitudinal bars and ties). Most secant pile walls have neither; use "steel alone" unless these are provided.');
   if (!(Lh > 0)) warnings.push('Steel flanges meet or overlap between reinforced piles; plain-concrete span checks are not applicable.');
   if (!s.db) warnings.push('Custom section: h/tw is taken as (d − 2tf)/tw and shear uses φv = 0.90 (G2.1b).');
@@ -629,10 +633,11 @@ function calcBlocks(r) {
 
   if (r.crack) {
     const c = r.crack;
-    H('G. Primary pile under wall curvature (compatibility)');
-    P('The primary piles are bonded to the reinforced piles through the overlap, so they bend with the same curvature. If that curvature cracks them, they cannot add stiffness (αp must be 0). Horizontal cracks do not cut their horizontal lagging span (§E), because that span has its tension on vertical planes.');
-    E("\\kappa=\\frac{M_{s,pile}}{EI_{eff}+E_{c,p}I_g}=\\frac{" + n_(c.Msp, 0) + "}{" + n_(c.EIsec / 1e6, 2) + "\\times10^6+" + n_(c.EIpu / 1e6, 2) + "\\times10^6}=" + n_(c.kap * 1e6, 3) + "\\times10^{-6}\\ \\text{in}^{-1}");
-    E("f_t=E_{c,p}\\,\\kappa\\,\\tfrac D2=" + n_(c.ft, 3) + "\\ \\text{ksi}\\ " + (c.cracks ? ">" : "\\le") + "\\ f_r=7.5\\lambda\\sqrt{f'_{c,p}}=" + n_(c.fr, 3) + "\\ \\text{ksi}\\ \\Rightarrow\\ \\text{" + (c.cracks ? 'primary piles crack: use }\\alpha_p=0' : 'uncracked: }\\alpha_p\\le1\\text{ admissible') + "}", 'ACI 318-19 19.2.3.1');
+    H('G. Primary pile under wall curvature: when α_p > 0 is admissible');
+    P('The primary piles are bonded to the reinforced piles through the overlap, so they bend with the same curvature. The check applies only when their stiffness is credited (α_p > 0): they must then stay uncracked under the service moment. With α_p = 0 nothing is credited and no check is needed; the values below are for information' + (c.required ? '.' : ', computed with α_p = 1.') + ' Horizontal cracks from this bending do not cut the horizontal lagging span (Sec. E), whose tension acts on vertical planes.');
+    E("\\kappa=\\frac{M_{s,pile}}{EI_{eff}+\\alpha_pE_{c,p}I_g}=\\frac{" + n_(c.Msp, 0) + "}{" + n_(c.EIsec / 1e6, 2) + "\\times10^6+" + n_(c.apU, 2) + "\\times" + n_(c.EIpu / 1e6, 2) + "\\times10^6}=" + n_(c.kap * 1e6, 3) + "\\times10^{-6}\\ \\text{in}^{-1}");
+    E("f_t=E_{c,p}\\,\\kappa\\,\\tfrac D2=" + n_(c.ft, 3) + "\\ \\text{ksi}\\ " + (c.cracks ? ">" : "\\le") + "\\ f_r=7.5\\lambda\\sqrt{f'_{c,p}}=" + n_(c.fr, 3) + "\\ \\text{ksi}", 'ACI 318-19 19.2.3.1');
+    E("M_{cr,pile}=\\frac{f_r}{E_{c,p}\\,D/2}\\big(EI_{eff}+\\alpha_pE_{c,p}I_g\\big)=" + n_(c.Mcr / 12, 0) + "\\ \\text{kip-ft}\\ \\text{vs}\\ M_{s,pile}=" + n_(c.Msp / 12, 0) + "\\ \\Rightarrow\\ " + (c.cracks ? (c.required ? "\\text{cracks: NG, set }\\alpha_p=0" : "\\text{would crack: keep }\\alpha_p=0") : "\\text{uncracked: }\\alpha_p\\le" + n_(c.apU, 2) + "\\text{ admissible}"));
   }
   H('F. Effective flexural stiffness per ft of wall');
   E("EI_{s}=E_sI_s=" + n_(I.Es, 0) + "\\times" + n_(s.Ix, 0) + "=" + n_(r.stiff[0].EIsec / 1e6, 2) + "\\times10^6\\ \\text{kip-in}^2");
@@ -644,6 +649,11 @@ function calcBlocks(r) {
   P('The average over the repeat width b is used for beam-on-springs or SSI analysis. Circles are taken whole (overlap is not deducted), which slightly overstates the upper bound.');
   return B;
 }
+const AP_TEXT = [
+  'αp is the fraction of the primary (unreinforced) pile gross stiffness Ec,p·Ig added to the wall average EI per ft. It changes stiffness only, never strength: Mu and Vu always go wholly to the reinforced piles.',
+  'Use αp = 0 (default, recommended) when the primary piles crack under the service moment, as they usually do, or when you are estimating deflection (the softer wall deflects more).',
+  'Use 0 < αp ≤ 1 only if the primary piles stay uncracked under Ms, i.e. Ms,pile ≤ Mcr,pile in Sec. G. That check is required whenever αp > 0.',
+  'EI does not change Mu or Vu from the free-earth (rigid-wall) analysis in the wall designer. αp matters only for deflection, soil-structure (beam-on-springs) models and Rowe flexibility. For soil-structure models, bound the answer: αp = 0 (or steel only) for maximum deflection, uncracked upper bound for maximum moment and support load.'];
 const ASSUME = r => [
   'Demand transfer: the wall analysis is plane strain (per ft). Reinforced piles take the vertical bending and shear of their full tributary width b (Mu,pile = Mu x b, Vu,pile = Vu x b). Primary piles are given no vertical strength; they span horizontally between reinforced piles under the factored net pressure wu, and their cracking under wall curvature decides whether they may add stiffness.',
   'Steel ' + (r.s.type === 'HP' ? 'HP' : r.s.type === 'W' ? 'W' : 'custom') + ' shape centred in each reinforced pile, web perpendicular to the wall, bending about the strong axis. Demands are factored (ASCE 7-22 §2.3 / AASHTO) and entered per reinforced pile, i.e. the wall-designer per-ft result × b = ' + f1(r.g.b, 1) + ' in (FHWA 8.12.4).',
@@ -732,7 +742,7 @@ async function buildPDF(res, jsPDF, tex2svg) {
   fig(planFig(r), 'Figure 1 - Plan of the secant wall repeat unit (dimensions in inches unless noted).');
   fig(sectionFig(r), 'Figure 2 - Reinforced pile cross section and plastic stress distribution for flexure.');
   H2('1.1 Assumptions');
-  ASSUME(r).forEach(t => P('- ' + t, { size: 8.2, gap: 0.4 }));
+  ASSUME(r).forEach(t => P('- ' + t.replace(/αp/g, 'alpha_p'), { size: 8.2, gap: 0.4 }));
   H2('1.2 Inputs');
   const u2 = (a, b) => a.map((x, i) => [...x, ...(b[i] || ['', '', ''])]);
   await T(['Geometry / materials', 'Value', 'Unit', 'Factored demands / criteria', 'Value', 'Unit'], u2([
@@ -749,12 +759,14 @@ async function buildPDF(res, jsPDF, tex2svg) {
   if (r.link) P('Demands source: wall designer file for ' + (r.link.src.proj || '') + ' / ' + (r.link.src.wall || '') + ' (' + String(r.link.src.created).slice(0, 16).replace('T', ' ') + ' UTC). ' + (r.link.diffs.length ? 'Inputs edited after linking: ' + r.link.diffs.join('; ') + '.' : 'All linked values unchanged.'), { size: 7.8, c: r.link.diffs.length ? NG : MUT });
   else P('Demands source: entered manually (not linked to the wall designer).', { size: 7.8, c: MUT });
   H1('2  Demand / capacity summary');
-  await T(['Check', 'Demand', 'Capacity', 'Unit', 'Per ft wall: dem. / cap.', 'DCR', 'Status', 'Reference'], r.ck.map(c => ({ cells: [c.n, fmtV(c.dem, c.u === '-' ? 3 : 2), fmtV(c.cap, c.u === '-' ? 3 : 2), c.u, c.pu ? fmtV(c.pdem, 1) + ' / ' + fmtV(c.pcap, 1) + ' ' + c.pu : '-', c.dcr.toFixed(2), c.info ? 'INFO' : c.ok ? 'OK' : 'NG', c.ref], _col: [null, null, null, MUT, null, c.info ? MUT : c.ok ? OK : NG, c.info ? MUT : c.ok ? OK : NG, MUT] })),
+  await T(['Check', 'Demand', 'Capacity', 'Unit', 'Per ft wall: dem. / cap.', 'DCR', 'Status', 'Reference'], r.ck.map(c => ({ cells: [c.n, fmtV(c.dem, c.u === '-' ? 3 : 2), fmtV(c.cap, c.u === '-' ? 3 : 2), c.u, c.pu ? fmtV(c.pdem, 1) + ' / ' + fmtV(c.pcap, 1) + ' ' + c.pu : '-', c.info ? '-' : c.dcr.toFixed(2), c.info ? 'N/A' : c.ok ? 'OK' : 'NG', c.ref], _col: [null, null, null, MUT, null, c.info ? MUT : c.ok ? OK : NG, c.info ? MUT : c.ok ? OK : NG, MUT] })),
     [46, 13, 13, 17, 26, 9, 9, 47], { fs: 7.0, wrap: [true, false, false, true, true, false, false, true], align: ['left', 'right', 'right', 'left', 'right', 'right', 'left', 'left'] });
   await T(['Design capacity', 'Per pile', 'Per ft of wall', 'Unit (pile / ft)'], capRows(r), [74, 30, 30, 46], { fs: 8, align: ['left', 'right', 'right', 'left'] });
   if (r.warnings.length) { H2('Notes'); r.warnings.forEach(w => P('- ' + w, { size: 8, c: NG, gap: 0.4 })); }
 
   H1('3  Effective flexural stiffness (per ft of wall)');
+  AP_TEXT.forEach(t => P('- ' + t.replace(/αp/g, 'alpha_p'), { size: 8, gap: 0.4 }));
+  if (r.crack) P('This wall: Ms,pile = ' + f1(r.crack.Msp / 12, 0) + ' kip-ft vs cracking moment ' + f1(r.crack.Mcr / 12, 0) + ' kip-ft -> ' + (r.crack.cracks ? 'primary piles crack, so use alpha_p = 0.' : 'primary piles uncracked; alpha_p up to ' + f1(r.crack.apU, 2) + ' admissible.'), { size: 8, c: r.crack.cracks && r.crack.required ? NG : INK });
   await T(['Case', 'EI per ft (kip-in^2/ft)', 'EI (kip-ft^2/ft)', 'I_s (in^4/ft)', 'I_c (in^4/ft)', 't_eq (in)'], r.stiff.map(x => ({ cells: [x.n, (x.EIft / 1e6).toFixed(3) + 'e6', f1(x.EIkft2, 0), f1(x.Is_ft, 0), f1(x.Ic_ft, 0), f1(x.teq, 1)], _bold: x.design ? 1 : 0 })), [70, 26, 22, 20, 20, 14], { fs: 7.4, wrap: [true, false, false, false, false, false] });
 
   H1('4  Calculations');
@@ -805,7 +817,7 @@ const SCHEMA = [
  { g: 'Design options', open: true, f: [
   { id: 'method', l: 'Flexure / axial model', t: 'sel', o: [['steel', 'Steel section alone (AISC I3.3b, E3/E7)'], ['comp', 'Composite (AISC I3.3c, I2.1b) — needs anchors']], v: 'steel' },
   { id: 'Lc', l: 'Effective length for axial buckling Lc (0 = braced by concrete/soil)', u: 'ft', v: 0 },
-  { id: 'ap', l: 'Primary-pile stiffness factor αp (0 = ignore, 1 = uncracked)', u: '–', v: 0 },
+  { id: 'ap', l: 'Primary-pile stiffness factor αp (0 = ignore, 1 = uncracked)', u: '–', v: 0, h: 'Stiffness only, not strength. Keep 0 unless the primary piles stay uncracked under Ms (checked automatically when αp > 0).' },
   { id: 'soil', l: 'Concrete cast against soil (h − 2 in, ACI 14.5.1.7)', t: 'chk', v: true }] }
 ];
 const $ = q => document.querySelector(q);
@@ -821,7 +833,7 @@ function renderInputs() {
       else if (f.t === 'sel') h += `<div class="row wide"${dep}>${lab}<select id="${f.id}">${f.o.map(o => `<option value="${o[0]}"${o[0] === f.v ? ' selected' : ''}>${esc(o[1])}</option>`).join('')}</select></div>`;
       else if (f.t === 'shape') h += `<div class="row wide"${dep}>${lab}<select id="${f.id}">${shapeOptions('W', f.v)}</select></div><div class="help" id="shapeInfo"></div>`;
       else if (f.t === 'chk') h += `<div class="row"${dep}>${lab}<input id="${f.id}" type="checkbox"${f.v ? ' checked' : ''}></div>`;
-      else h += `<div class="row"${dep}>${lab}<input id="${f.id}" type="number" step="any" inputmode="decimal" value="${f.v}"></div>`;
+      else h += `<div class="row"${dep}>${lab}<input id="${f.id}" type="number" step="any" inputmode="decimal" value="${f.v}"></div>` + (f.h ? `<div class="help">${esc(f.h)}</div>` : '');
     }
     h += '</details>';
   }
@@ -857,7 +869,7 @@ function applyInputs(I) {
 function syncDeps(I) { document.querySelectorAll('[data-dep]').forEach(r => { const d = JSON.parse(r.dataset.dep); r.hidden = !d.slice(1).includes(I[d[0]]); }); const si = $('#shapeInfo'); if (si) { si.hidden = I.src === 'custom'; const s = SHAPE_BY.get(I.shape); si.textContent = s ? `A ${s.A} in², d ${s.d} in, bf ${s.bf} in, tf ${s.tf} in, tw ${s.tw} in, Ix ${s.Ix} in⁴, Zx ${s.Zx} in³, ${s.W} lb/ft` : ''; } }
 let timer = null, RES = null, TAB = 'sec', dirty = { der: true };
 function schedule() { clearTimeout(timer); $('#main').classList.add('busy'); timer = setTimeout(run, 200); }
-const pill = s => `<span class="pill ${s}">${s === 'ok' ? 'OK' : s === 'na' ? 'INFO' : 'NG'}</span>`;
+const pill = s => `<span class="pill ${s}">${s === 'ok' ? 'OK' : s === 'na' ? 'N/A' : 'NG'}</span>`;
 function run() {
   const I = gather(); syncDeps(I); $('#main').classList.remove('busy');
   try { const J = Object.assign({}, I); delete J.link; localStorage.setItem('spsd-inputs-v2', JSON.stringify(J)); } catch (e) { }
@@ -878,12 +890,12 @@ function renderSummary(r) {
    <div><b>${f1(r.sh.Vc / b, 1)}</b><span>φVn, kip/ft of wall</span></div>
    <div><b style="color:var(--${mx <= 1 ? 'ok' : 'ng'})">${mx.toFixed(2)}</b><span>Max DCR</span></div></div>
   <div class="scroll"><table class="t"><tr><th>Check</th><th>Demand</th><th>Capacity</th><th class="l">Unit</th><th>Per ft of wall (÷ b)</th><th>DCR</th><th class="l">Reference</th></tr>
-  ${r.ck.map(c => `<tr><td>${esc(c.n)}</td><td>${fmtV(c.dem, c.u === '-' ? 3 : 2)}</td><td>${fmtV(c.cap, c.u === '-' ? 3 : 2)}</td><td class="l">${c.u === '-' ? '–' : esc(c.u)}</td><td>${c.pu ? fmtV(c.pdem, 1) + ' / ' + fmtV(c.pcap, 1) + ' ' + c.pu : '—'}</td><td><b>${c.dcr.toFixed(2)}</b> ${pill(c.info ? 'na' : c.ok ? 'ok' : 'ng')}</td><td class="ref">${esc(c.ref)}</td></tr>`).join('')}</table></div>
-  <p class="note">INFO rows are compatibility checks with no strength requirement: a primary pile that cracks is acceptable when αp = 0 (NG if αp > 0). Reinforced-pile checks use per-pile demands (wall-designer per-ft result × b, b = ${f1(b, 3)} ft); per-ft equivalents shown for reference. Primary/plain rows are per ft of wall height. DCR = demand / design capacity.</p>`;
+  ${r.ck.map(c => `<tr><td>${esc(c.n)}</td><td>${fmtV(c.dem, c.u === '-' ? 3 : 2)}</td><td>${fmtV(c.cap, c.u === '-' ? 3 : 2)}</td><td class="l">${c.u === '-' ? '–' : esc(c.u)}</td><td>${c.pu ? fmtV(c.pdem, 1) + ' / ' + fmtV(c.pcap, 1) + ' ' + c.pu : '—'}</td><td><b>${c.info ? '—' : c.dcr.toFixed(2)}</b> ${pill(c.info ? 'na' : c.ok ? 'ok' : 'ng')}</td><td class="ref">${esc(c.ref)}</td></tr>`).join('')}</table></div>
+  <p class="note">The primary-pile cracking check is only required when αp > 0 (primary stiffness credited); with αp = 0 it is shown for information (Ms vs cracking moment). Reinforced-pile checks use per-pile demands (wall-designer per-ft result × b, b = ${f1(b, 3)} ft); per-ft equivalents shown for reference. Primary/plain rows are per ft of wall height. DCR = demand / design capacity.</p>`;
 }
 function renderSec(r) { $('#tab-sec').innerHTML = `<div class="card">${planFig(r).svg()}</div><div class="card" style="margin-top:12px">${sectionFig(r).svg()}</div>
   <h3>Design capacities</h3>${tbl(['Capacity', 'Per pile', 'Per ft of wall', 'Unit'], capRows(r).map(x => x.map(esc)))}`; }
-function renderStf(r) { $('#tab-stf').innerHTML = `<div class="prose"><p>Average flexural stiffness over the repeat width b = ${f1(r.g.b, 1)} in. The design row feeds beam-on-springs / SSI wall models. C1 = ${r.C1.toFixed(3)} (AISC Eq. I2-7).</p></div>` +
+function renderStf(r) { const c = r.crack; $('#tab-stf').innerHTML = `<div class="prose"><p>Average flexural stiffness over the repeat width b = ${f1(r.g.b, 1)} in. The design row feeds beam-on-springs / SSI wall models. C1 = ${r.C1.toFixed(3)} (AISC Eq. I2-7).</p><h3>Primary-pile stiffness factor αp</h3>${AP_TEXT.map(t => `<p>${esc(t)}</p>`).join('')}${c ? `<p><b>This wall:</b> Ms,pile = ${f1(c.Msp / 12, 0)} kip-ft vs cracking moment ${f1(c.Mcr / 12, 0)} kip-ft (with αp = ${f1(c.apU, 2)}) → ${c.cracks ? 'primary piles crack; use αp = 0' : 'primary piles uncracked; αp up to ' + f1(c.apU, 2) + ' admissible'}.</p>` : ''}</div>` +
   tbl(['Case', 'EI per ft, kip-in²/ft', 'EI, kip-ft²/ft', 'I in steel units, in⁴/ft', 'I in concrete units, in⁴/ft', 'Equivalent solid thickness, in'], r.stiff.map(x => [(x.design ? '<b>' : '') + esc(x.n) + (x.design ? '</b>' : ''), (x.EIft / 1e6).toFixed(3) + '×10⁶', f1(x.EIkft2, 0), f1(x.Is_ft, 0), f1(x.Ic_ft, 0), f1(x.teq, 1)])); }
 function tbl(head, rows) { return `<div class="scroll"><table class="t"><tr>${head.map(h => `<th>${h}</th>`).join('')}</tr>${rows.map(x => '<tr>' + x.map(c => `<td>${c}</td>`).join('') + '</tr>').join('')}</table></div>`; }
 let derToken = 0;
